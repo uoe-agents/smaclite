@@ -1,3 +1,3 @@
-from smaclite.env.Smaclite import SMACLiteEnv
+from smaclite.env.smaclite import SMACLiteEnv
 
 __all__ = ["SMACLiteEnv"]

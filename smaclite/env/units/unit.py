@@ -1,66 +1,15 @@
-from dataclasses import dataclass
-
-from enum import Enum
-
-MELEE_ATTACK_RANGE = -1
+from smaclite.env.units.unit_type import UnitType
+from smaclite.env.maps.map import Faction
 
 
-@dataclass
-class UnitStats(object):
-    hp: int
-    armor: int
-    damage: int
-    cooldown: float
-    speed: float
-    attack_range: int
-    sight_range: int
-    size: float
-    shield: int = 0
-    attacks: int = 1
-
-
-class UnitType(Enum):
-    """Various types of units adapted from Starcraft 2
-
-    Statistics taken from https://liquipedia.net/starcraft2/Unit_Statistics_(Legacy_of_the_Void)  # noqa
-    """
-    @property
-    def stats(self):
-        return self.value
-
-    # Zerg units
-    ZERGLING = UnitStats(hp=35,
-                         armor=0,
-                         damage=5,
-                         cooldown=0.497,
-                         speed=4.13,
-                         attack_range=MELEE_ATTACK_RANGE,
-                         sight_range=8,
-                         size=0.75)
-
-    # Terran units
-    MARINE = UnitStats(hp=45,
-                       armor=0,
-                       damage=6,
-                       cooldown=0.61,
-                       speed=3.15,
-                       attack_range=5,
-                       sight_range=9,
-                       size=0.75)
-
-    # Protoss units
-    ZEALOT = UnitStats(hp=100,
-                       armor=1,
-                       shield=50,
-                       damage=8,
-                       cooldown=0.86,
-                       attacks=2,
-                       speed=3.15,
-                       attack_range=MELEE_ATTACK_RANGE,
-                       sight_range=9,
-                       size=1)
-
-
-class Unit:
-    def __init__(self, type: UnitType) -> None:
-        self.type = type
+class Unit(object):
+    def __init__(self, unit_type: UnitType, faction: Faction,
+                 x: float, y: float) -> None:
+        self.type = unit_type
+        self.hp = unit_type.stats.hp
+        self.has_shields = unit_type.stats.shield > 0
+        if self.has_shields:
+            self.shields = unit_type.stats.shield
+        self.faction = faction
+        self.x = x
+        self.y = y

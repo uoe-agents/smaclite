@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Tuple
 
-from smaclite.env.units.unit import UnitType
+from smaclite.env.units.unit_type import UnitType
 
 
 class Faction(Enum):
