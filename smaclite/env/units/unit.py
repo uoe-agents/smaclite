@@ -7,9 +7,14 @@ class Unit(object):
                  x: float, y: float) -> None:
         self.type = unit_type
         self.hp = unit_type.stats.hp
-        self.has_shields = unit_type.stats.shield > 0
-        if self.has_shields:
-            self.shields = unit_type.stats.shield
+        self.shield = unit_type.stats.shield
         self.faction = faction
         self.x = x
         self.y = y
+        self.cooldown = 0
+
+    def take_damage(self, attacker: 'Unit') -> float:
+        raise NotImplementedError
+
+    def decrease_cooldown(self, amount: float) -> None:
+        raise NotImplementedError
