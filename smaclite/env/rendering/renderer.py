@@ -5,6 +5,7 @@ from smaclite.env.maps.map import Faction, MapInfo, TerrainType
 import pygame
 
 from smaclite.env.units.unit import Unit
+from smaclite.env.units.unit_command import AttackMoveCommand, MoveCommand
 from smaclite.env.units.unit_type import UnitType
 
 TILE_SIZE = 32
@@ -59,8 +60,8 @@ class Renderer:
             if unit.hp == 0:
                 continue
             color = FACTION_COLORS[unit.faction]
-            radius = TILE_SIZE * unit.type.stats.size / 2
-            center = (TILE_SIZE * unit.x, TILE_SIZE * unit.y)
+            radius = TILE_SIZE * unit.radius
+            center = np_to_pygame(unit.pos)
             pygame.draw.circle(canvas, color, center, radius)
             main_font_size = int(radius * 0.9)
             if unit.type not in self.fonts:
@@ -70,16 +71,34 @@ class Renderer:
                 self.fonts[unit.type] = font
             font = self.fonts[unit.type]
             hp_str = f"{unit.hp}"
-            if unit.type.stats.shield:
+            if unit.max_shield:
                 hp_str += f"+{unit.shield}"
             hp_font = pygame.font.SysFont("Monospace",
                                           int(radius) // 2) \
                 .render(hp_str, True, (0, 0, 0), (255, 255, 255, 230))
+            cd_font = pygame.font.SysFont("Monospace",
+                                          int(radius) // 2) \
+                .render(f"{unit.cooldown:.02f}", True, (0, 0, 0),
+                        (255, 255, 255, 230))
             canvas.blit(font, font.get_rect(center=center))
             canvas.blit(hp_font,
                         hp_font.get_rect(center=(center[0],
                                                  center[1] + main_font_size)))
-            canvas
+            canvas.blit(cd_font,
+                        cd_font.get_rect(center=(center[0],
+                                                 center[1] - main_font_size)))
+            if unit.target is not None:
+                pygame.draw.line(canvas, (0, 0, 255),
+                                 np_to_pygame(unit.pos),
+                                 np_to_pygame(unit.target.pos))
+            elif isinstance(unit.command, AttackMoveCommand):
+                pygame.draw.line(canvas, (255, 0, 0),
+                                 np_to_pygame(unit.pos),
+                                 np_to_pygame(unit.command.pos))
+            elif isinstance(unit.command, MoveCommand):
+                pygame.draw.line(canvas, (0, 255, 0),
+                                 np_to_pygame(unit.pos),
+                                 np_to_pygame(unit.command.pos))
 
         self.window.blit(canvas, canvas.get_rect())
         pygame.event.pump()
@@ -88,10 +107,14 @@ class Renderer:
         self.clock.tick(RENDER_FPS)
 
     def close(self):
-        if self.windows is not None:
+        if self.window is not None:
             pygame.display.quit()
             pygame.quit()
 
     def __create_window(self, map_info: MapInfo):
         return pygame.display.set_mode((TILE_SIZE * map_info.width,
                                         TILE_SIZE * map_info.height))
+
+
+def np_to_pygame(np_vec):
+    return tuple(TILE_SIZE * np_vec.astype(float))

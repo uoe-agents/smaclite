@@ -30,6 +30,7 @@ class MapInfo(object):
     num_allied_units: int
     num_enemy_units: int
     groups: List[Group]
+    attack_point: Tuple[int, int]
     terrain: List[List[int]]
     ally_has_shields: bool
     enemy_has_shields: bool
@@ -66,6 +67,7 @@ class MapPreset(Enum):
             Group(9, 16, Faction.ALLY, [(UnitType.MARINE, 10)]),
             Group(23, 16, Faction.ENEMY, [(UnitType.MARINE, 11)])
         ],
+        attack_point=(9, 16),
         terrain=TerrainPreset.SIMPLE.value,
         num_unit_types=0,
         ally_has_shields=False,
@@ -81,6 +83,7 @@ class MapPreset(Enum):
             Group(23, 16, Faction.ENEMY, [(UnitType.STALKER, 3),
                                           (UnitType.ZEALOT, 6)])
         ],
+        attack_point=(9, 16),
         terrain=TerrainPreset.SIMPLE.value,
         num_unit_types=2,
         ally_has_shields=True,
