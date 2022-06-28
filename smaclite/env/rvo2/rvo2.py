@@ -33,6 +33,21 @@ def velocity_computing_job(in_queue, out_queue):
 
 def compute_new_velocity(idd: int, neighbour_ids: List[int],
                          all_units: List[Unit]):
+    """This is, for the most part, a direct port of the C++ RVO2 library.
+    All credits for the original code go to:
+    https://gamma.cs.unc.edu/RVO2/
+
+    Computes an adjusted velocity that takes into account collision avoidance,
+    using ORCA (Optimal Reciprocal Collision Avoidance).
+
+    Args:
+        idd (int): the index of the unit for which the velocity is computed
+        neighbour_ids (List[int]): the indices of the neighbouring units
+        all_units (List[Unit]): the list of all units
+
+    Returns:
+        _type_: the new velocity for the unit
+    """
     unit = all_units[idd]
     if unit.hp == 0:
         return unit.pref_velocity
