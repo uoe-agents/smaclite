@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from typing import Callable, List, Tuple
+from typing import List, Tuple
 import numpy as np
 
 from smaclite.env.units.unit import Unit
 
-INV_TIME_HORIZON = 1 / 2
+TAU = 1
+INV_TIME_HORIZON = 1 / TAU
 USE_RVO = True
 
 
@@ -22,17 +23,7 @@ def normalize(v: np.ndarray) -> np.ndarray:
     return v / np.linalg.norm(v)
 
 
-def velocity_computing_job(in_queue, out_queue):
-    while True:
-        idd, unit_ids, all_units = in_queue.get()
-        if idd is None:
-            break
-        next_velocity = compute_new_velocity(idd, unit_ids, all_units)
-        out_queue.put((idd, next_velocity))
-
-
-def compute_new_velocity(idd: int, neighbour_ids: List[int],
-                         all_units: List[Unit]):
+def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]]):
     """This is, for the most part, a direct port of the C++ RVO2 library.
     All credits for the original code go to:
     https://gamma.cs.unc.edu/RVO2/
@@ -48,20 +39,25 @@ def compute_new_velocity(idd: int, neighbour_ids: List[int],
     Returns:
         _type_: the new velocity for the unit
     """
-    unit = all_units[idd]
+    if not unit.pref_velocity.any():
+        return unit.pref_velocity
     if unit.hp == 0:
         return unit.pref_velocity
-    lines = []
-    for idx in neighbour_ids:
-        other = all_units[idx]
+    obstacle_lines = []
+    unit_lines = []
+    for other, distance in neighbours:
         if other == unit or other.hp == 0:
             continue
         relative_position = other.pos - unit.pos
         relative_velocity = unit.velocity - other.velocity
-        distance_sq = np.inner(relative_position, relative_position)
+        distance_sq = distance ** 2
         combined_radius = unit.radius + other.radius
         combined_radius_sq = combined_radius ** 2
-        multiplier = 0.5
+        # If the other unit is moving too, assume
+        # it will move out of the way by half.
+        # Otherwise, assume it will stand still, and move out of the way fully.
+        multiplier = 0.5 if other.pref_velocity.any() else 1
+        line_list = unit_lines if other.pref_velocity.any() else obstacle_lines
 
         line = Line()
         u = None
@@ -112,13 +108,16 @@ def compute_new_velocity(idd: int, neighbour_ids: List[int],
             line.direction = np.array([unit_w[1], -unit_w[0]])
             u = (combined_radius * inv_time_step - w_length) * unit_w
         line.point = unit.velocity + multiplier * u
-        lines.append(line)
+        line_list.append(line)
+    num_obstacle_lines = len(obstacle_lines)
+    lines = obstacle_lines + unit_lines
 
     lines_successful, result = linear_program_2(lines, unit.max_velocity,
                                                 unit.pref_velocity, False)
     if lines_successful < len(lines):
-        result = linear_program_3(lines, lines_successful,
-                                  unit.max_velocity, result)
+        result = linear_program_3(lines, num_obstacle_lines,
+                                  lines_successful, unit.max_velocity,
+                                  result)
 
     return result
 
@@ -142,7 +141,7 @@ def linear_program_1(lines: List[Line], line_no: int, max_velocity: float,
         denominator = det(line.direction, other.direction)
         numerator = det(other.direction, line.point - other.point)
 
-        if abs(denominator) < 1e-6:
+        if abs(denominator) < 1e-5:
             # lines are parallel
             if numerator < 0:
                 return False, None
@@ -193,22 +192,22 @@ def linear_program_2(lines: List[Line], max_velocity: float,
     return len(lines), result
 
 
-def linear_program_3(lines: List[Line], lines_successful: int,
-                     max_velocity: float,
+def linear_program_3(lines: List[Line], num_obstacle_lines: int,
+                     lines_successful: int, max_velocity: float,
                      current_result: np.ndarray) -> np.ndarray:
     distance = 0.0
     result = current_result
 
     for i in range(lines_successful, len(lines)):
         line = lines[i]
-        if det(line.direction, line.point - line.point) <= distance:
+        if det(line.direction, line.point - result) <= distance:
             # already outside
             continue
-        new_lines = []
+        new_lines = []  # lines[:num_obstacle_lines]
         for other in lines[:i]:
             new_line = Line()
             determinant = det(line.direction, other.direction)
-            if abs(determinant) < 1e-6:
+            if abs(determinant) < 1e-5:
                 # lines are parallel
                 if np.inner(line.direction, other.direction) > 0:
                     # lines are in the same direction
@@ -221,11 +220,11 @@ def linear_program_3(lines: List[Line], lines_successful: int,
                     / determinant * line.direction
             new_line.direction = normalize(other.direction - line.direction)
             new_lines.append(new_line)
-        tmp_result = current_result.copy()
+        tmp_result = result.copy()
         lines_successful, result = linear_program_2(new_lines, max_velocity,
                                                     np.array([-line.direction[1],
-                                                              line.direction[0]],),
-                                                    True, current_result)
+                                                              line.direction[0]]),
+                                                    True, result)
         if lines_successful < len(new_lines):
             result = tmp_result
 

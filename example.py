@@ -10,9 +10,9 @@ RENDER = True
 
 def main():
     # np.random.seed(2)
-    env = gym.make("smaclite/3s5z_vs_3s6z-v0")
+    env = gym.make("smaclite/2s3z-v0")
 
-    episode_num = 10
+    episode_num = 100
     for i in range(episode_num):
         obs, info = env.reset(return_info=True)
         done = False
@@ -26,7 +26,7 @@ def main():
                 avail_indices = [i for i, x
                                  in enumerate(avail_actions[info])
                                  if x]
-                actions.append(np.random.choice(avail_indices))
+                actions.append(int(np.random.choice(avail_indices)))
             if RENDER:
                 env.render()
                 # time.sleep(1/2)

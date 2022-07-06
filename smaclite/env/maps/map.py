@@ -73,6 +73,20 @@ class MapPreset(Enum):
         ally_has_shields=False,
         enemy_has_shields=False,
     )
+    MAP_27M_VS_30M = MapInfo(
+        name="27m_vs_30m",
+        num_allied_units=27,
+        num_enemy_units=30,
+        groups=[
+            Group(9, 16, Faction.ALLY, [(UnitType.MARINE, 27)]),
+            Group(23, 16, Faction.ENEMY, [(UnitType.MARINE, 30)])
+        ],
+        attack_point=(9, 16),
+        terrain=TerrainPreset.SIMPLE.value,
+        num_unit_types=0,
+        ally_has_shields=False,
+        enemy_has_shields=False,
+    )
     MAP_3S5Z_VS_3S6Z = MapInfo(
         name="3s5z_vs_3s6z",
         num_allied_units=8,
@@ -93,3 +107,24 @@ class MapPreset(Enum):
             UnitType.ZEALOT: 1,
         }
     )
+    MAP_2S3Z = MapInfo(
+        name="2s3z",
+        num_allied_units=5,
+        num_enemy_units=5,
+        groups=[
+            Group(9, 16, Faction.ALLY, [(UnitType.STALKER, 2),
+                                        (UnitType.ZEALOT, 3)]),
+            Group(23, 16, Faction.ENEMY, [(UnitType.STALKER, 2),
+                                            (UnitType.ZEALOT, 3)])
+        ],
+        attack_point=(9, 16),
+        terrain=TerrainPreset.SIMPLE.value,
+        num_unit_types=2,
+        ally_has_shields=True,
+        enemy_has_shields=True,
+        unit_type_ids={
+            UnitType.STALKER: 0,
+            UnitType.ZEALOT: 1,
+        }
+    )
+

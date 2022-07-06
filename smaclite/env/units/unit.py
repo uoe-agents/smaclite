@@ -9,8 +9,9 @@ SHIELD_REGEN = 2
 
 class Unit(object):
     def __init__(self, unit_type: UnitType, faction: Faction,
-                 x: float, y: float, idd: int) -> None:
+                 x: float, y: float, idd: int, idd_in_faction: int) -> None:
         self.id = idd
+        self.id_in_faction = idd_in_faction
         self.type = unit_type
         self.max_hp = unit_type.stats.hp
         self.max_shield = unit_type.stats.shield
@@ -37,6 +38,12 @@ class Unit(object):
         self.max_velocity = unit_type.stats.speed
         self.combat_type = unit_type.stats.combat_type
         self.attacking = False
+        self.attacks = self.type.stats.attacks
+        # Used for the purpose of attack-moving
+        self.potential_targets = []
+
+    def clean_up_target(self):
+        self.command.clean_up_target(self)
 
     def prepare_velocity(self):
         self.pref_velocity = self.command.prepare_velocity(self)
@@ -44,7 +51,7 @@ class Unit(object):
     def game_step(self):
         if self.hp == 0:
             return 0
-        if np.linalg.norm(self.next_velocity) - self.max_velocity > 1e-6:
+        if np.linalg.norm(self.next_velocity) - self.max_velocity > 1e-4:
             print(f"Unit {self.type.name} is too fast! {self.next_velocity} "
                   f"{np.linalg.norm(self.next_velocity)} > {self.max_velocity}")
         self.velocity = self.next_velocity
@@ -72,12 +79,11 @@ class Unit(object):
 
     def deal_damage(self, target: 'Unit') -> float:
         damage = self.damage
-        if not self.bonuses:
-            return target.take_damage(damage)
-        for attribute, amount in self.bonuses.items():
-            if attribute in target.attributes:
-                damage += amount
-        return target.take_damage(damage)
+        if self.bonuses:
+            for attribute, amount in self.bonuses.items():
+                if attribute in target.attributes:
+                    damage += amount
+        return sum(target.take_damage(damage) for _ in range(self.attacks))
 
     def take_damage(self, amount) -> float:
         if self.hp == 0:

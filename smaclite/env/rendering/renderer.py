@@ -1,4 +1,4 @@
-
+import time
 
 from typing import List
 from smaclite.env.maps.map import Faction, MapInfo, TerrainType
@@ -35,6 +35,7 @@ class Renderer:
         self.fonts = {}
 
     def render(self, map_info: MapInfo, units: List[Unit]):
+        # time.sleep(0.1)
         if self.window is None:
             pygame.init()
             pygame.display.init()
