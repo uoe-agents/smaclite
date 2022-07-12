@@ -5,19 +5,22 @@ import numpy as np
 
 import smaclite  # noqa
 
-RENDER = True
+RENDER = False
 
 
 def main():
     # np.random.seed(2)
     env = gym.make("smaclite/2s3z-v0")
 
-    episode_num = 100
+    episode_num = 20
+    total_time = 0
+    total_timesteps = 0
     for i in range(episode_num):
         obs, info = env.reset(return_info=True)
         done = False
         episode_reward = 0
         timer = time.time()
+        episode_time = 0
         timestep_no = 0
         while not done and timestep_no < 200:
             actions = []
@@ -30,15 +33,18 @@ def main():
             if RENDER:
                 env.render()
                 # time.sleep(1/2)
+            timer = time.time()
             obs, reward, done, info = env.step(actions)
+            episode_time += time.time() - timer
             episode_reward += reward
             timestep_no += 1
-        end_timer = time.time()
-        secs = end_timer - timer
         print(f"Total reward in episode {episode_reward}")
-        print(f"Episode {i} took {secs} seconds "
+        print(f"Episode {i} took {episode_time} seconds "
               f"and {timestep_no} timesteps.")
-        print(f"Average per timestep: {secs/timestep_no}")
+        print(f"Average per timestep: {episode_time/timestep_no}")
+        total_time += episode_time
+        total_timesteps += timestep_no
+    print(f"Average time per timestep: {total_time/total_timesteps}")
     env.close()
 
 

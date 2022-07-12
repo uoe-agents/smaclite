@@ -1,12 +1,12 @@
 from typing import Dict
 
-from smaclite.env.rvo2.kdtree_facade import KDTreeFacade
+from smaclite.env.rvo2.neighbour_finder import NeighbourFinder
 import smaclite.env.rvo2.rvo2 as rvo2
 from smaclite.env.units.unit import Unit
 
 
 class VelocityUpdater:
-    def __init__(self, kd_tree: KDTreeFacade, max_radius: float):
+    def __init__(self, kd_tree: NeighbourFinder, max_radius: float):
         self.kd_tree = kd_tree
         self.max_radius = max_radius
 

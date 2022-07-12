@@ -43,6 +43,7 @@ class Unit(object):
         self.potential_targets = []
 
     def clean_up_target(self):
+        self.potential_targets = []
         self.command.clean_up_target(self)
 
     def prepare_velocity(self):
@@ -51,9 +52,6 @@ class Unit(object):
     def game_step(self):
         if self.hp == 0:
             return 0
-        if np.linalg.norm(self.next_velocity) - self.max_velocity > 1e-4:
-            print(f"Unit {self.type.name} is too fast! {self.next_velocity} "
-                  f"{np.linalg.norm(self.next_velocity)} > {self.max_velocity}")
         self.velocity = self.next_velocity
         self.pos += self.velocity * GAME_TICK_TIME
         self.next_velocity = None
@@ -96,7 +94,7 @@ class Unit(object):
             self.shield -= amount_shielded
             amount -= amount_shielded
             reward += amount_shielded
-        amount_dealt = min(amount - self.armor, self.hp)
+        amount_dealt = max(0, min(amount - self.armor, self.hp))
         self.hp -= amount_dealt
         reward += amount_dealt
         if self.faction == Faction.ALLY:

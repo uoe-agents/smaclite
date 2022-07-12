@@ -5,7 +5,7 @@ import gym
 import numpy as np
 
 from smaclite.env.maps.map import Faction, Group, MapInfo, TerrainType
-from smaclite.env.rvo2.kdtree_facade import KDTreeFacade
+from smaclite.env.rvo2.neighbour_finder import NeighbourFinder
 from smaclite.env.rvo2.velocity_updater import VelocityUpdater
 from smaclite.env.units.unit import Unit
 from smaclite.env.units.unit_command import (AttackMoveCommand,
@@ -53,9 +53,9 @@ class SMACliteEnv(gym.Env):
         self.enemies: Dict[int, Unit] = []
         self.all_units: Dict[int, Unit] = {}
         self.renderer = None
-        self.kd_tree_ally: KDTreeFacade = KDTreeFacade()
-        self.kd_tree_enemy: KDTreeFacade = KDTreeFacade()
-        self.kd_tree_all: KDTreeFacade = KDTreeFacade()
+        self.neighbour_finder_ally: NeighbourFinder = NeighbourFinder()
+        self.neighbour_finder_enemy: NeighbourFinder = NeighbourFinder()
+        self.neighbour_finder_all: NeighbourFinder = NeighbourFinder()
         num_medivacs = sum(sum(count for t, count in group.units
                                if t == UnitType.MEDIVAC)
                            for group in map_info.groups
@@ -68,7 +68,7 @@ class SMACliteEnv(gym.Env):
         self.max_unit_radius = max(type.radius
                                    for group in self.map_info.groups
                                    for type, _ in group.units)
-        self.velocity_updater = VelocityUpdater(self.kd_tree_all,
+        self.velocity_updater = VelocityUpdater(self.neighbour_finder_all,
                                                 self.max_unit_radius)
         self.last_actions: np.ndarray = np.zeros(self.n_actions
                                                  * self.n_agents)
@@ -126,9 +126,9 @@ class SMACliteEnv(gym.Env):
             self.__place_group(group)
         assert len(self.agents) == self.n_agents and \
             len(self.enemies) == self.n_enemies
-        self.kd_tree_ally.set_all_units(self.agents)
-        self.kd_tree_enemy.set_all_units(self.enemies)
-        self.kd_tree_all.set_all_units(self.all_units)
+        self.neighbour_finder_ally.set_all_units(self.agents)
+        self.neighbour_finder_enemy.set_all_units(self.enemies)
+        self.neighbour_finder_all.set_all_units(self.all_units)
         self.max_reward = self.n_enemies * REWARD_KILL + REWARD_WIN \
             + sum(enemy.hp + enemy.shield
                   for enemy in self.enemies.values())
@@ -171,7 +171,6 @@ class SMACliteEnv(gym.Env):
     def close(self):
         if self.renderer is not None:
             self.renderer.close()
-        self.velocity_updater.close()
 
     def get_avail_actions(self):
         avail_for_dead = np.zeros(self.n_actions)
@@ -206,21 +205,29 @@ class SMACliteEnv(gym.Env):
         # NOTE There is an assumption here that the set of attack-moving units
         # will never include any allied units. This is true right now,
         # but might change in the future.
-        attackmoving_units = [enemy for enemy in self.enemies.values()
-                              if enemy.target is None]
-        attackmoving_radii = [unit.minimum_scan_range + self.max_unit_radius
-                              for unit in attackmoving_units]
-        attackmoving_targets = \
-            self.kd_tree_ally.query_radius(attackmoving_units,
-                                           attackmoving_radii,
-                                           True)
-        for unit, targets in zip(attackmoving_units, attackmoving_targets):
-            unit.potential_targets = targets
+        if attackmoving_units := [enemy for enemy
+                                  in self.enemies.values()
+                                  if enemy.target is None]:
+            attackmoving_radii = [unit.minimum_scan_range
+                                  + self.max_unit_radius
+                                  for unit in attackmoving_units]
+            attackmoving_targets = \
+                self.neighbour_finder_ally.query_radius(attackmoving_units,
+                                                        attackmoving_radii,
+                                                        True)
+            for unit, targets in zip(attackmoving_units, attackmoving_targets):
+                unit.potential_targets = targets
+            for unit in self.agents.values():
+                if unit.target is not None:
+                    unit.target.potential_targets.append((unit, 2e9))
         for unit in self.all_units.values():
             unit.prepare_velocity()
         self.velocity_updater.compute_new_velocities(self.all_units)
         reward = sum(unit.game_step() for unit in self.all_units.values())
         self.__update_deaths()
+        self.neighbour_finder_all.update()
+        self.neighbour_finder_ally.update()
+        self.neighbour_finder_enemy.update()
         return reward
 
     def __get_unit_state_features(self, unit: Unit, ally: bool):
@@ -273,13 +280,16 @@ class SMACliteEnv(gym.Env):
                 continue
             agents[idx] = self.agents[i]
             idx += 1
-        self.kd_tree_enemy.set_all_units(self.enemies)
         visible_allies_lists = \
-            self.kd_tree_ally.query_radius(agents,
-                                           AGENT_SIGHT_RANGE)
+            self.neighbour_finder_ally.query_radius(agents,
+                                                    AGENT_SIGHT_RANGE,
+                                                    True)
         visible_enemies_lists = \
-            self.kd_tree_enemy.query_radius(agents,
-                                            AGENT_SIGHT_RANGE)
+            self.neighbour_finder_enemy.query_radius(agents,
+                                                     AGENT_SIGHT_RANGE,
+                                                     True)
+        assert len(visible_allies_lists) == len(visible_enemies_lists) == \
+            len(agents)
         for (agent,
              visible_allies,
              visible_enemies) in zip(agents,
@@ -316,7 +326,6 @@ class SMACliteEnv(gym.Env):
     def __get_agent_obs(self, unit: Unit,
                         visible_allies: List[Unit],
                         visible_enemies: List[Unit]):
-        assert unit.hp > 0
         avail_actions = self.__get_agent_avail_actions(unit)
         obs = np.zeros(self.obs_size, dtype=np.float32)
         # Movement features
@@ -324,11 +333,10 @@ class SMACliteEnv(gym.Env):
             obs[direction.value] = avail_actions[2 + direction.value]
         # Enemy features
         base_offset = 4
-        for enemy in visible_enemies:
-            dpos = enemy.pos - unit.pos
-            distance = np.linalg.norm(dpos)
-            if distance >= AGENT_SIGHT_RANGE or enemy.hp == 0:
+        for enemy, distance in visible_enemies:
+            if enemy.hp == 0:
                 continue
+            dpos = enemy.pos - unit.pos
             dx, dy = dpos
             base = base_offset + enemy.id_in_faction * self.enemy_feat_size
             obs[base] = avail_actions[6 + unit.id_in_faction]
@@ -346,13 +354,10 @@ class SMACliteEnv(gym.Env):
                         = self.__get_unit_type_id(enemy.type)
         base_offset += self.n_enemies * self.enemy_feat_size
         # Ally features
-        for ally in visible_allies:
-            if ally == unit:
+        for ally, distance in visible_allies:
+            if ally == unit or ally.hp == 0:
                 continue
             dpos = ally.pos - unit.pos
-            distance = np.linalg.norm(dpos)
-            if distance >= AGENT_SIGHT_RANGE or ally.hp == 0:
-                continue
             dx, dy = dpos
             base = base_offset + (ally.id_in_faction
                                   - (ally.id_in_faction

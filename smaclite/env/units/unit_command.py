@@ -80,20 +80,28 @@ class AttackMoveCommand(Command):
 
     def clean_up_target(self, unit: Unit) -> None:
         if unit.target is None:
+            # No target to lose.
             return
-        if unit.target.hp == 0 \
-                or not unit.has_within_attack_range(unit.target):
+        if unit.target.hp == 0:
+            # Always lose a dead target.
+            unit.target = None
+            return
+        if unit.target.target == unit:
+            # Don't lose an alive target who's attacking you.
+            return
+        if not unit.has_within_attack_range(unit.target):
+            # Otherwise lose the target if it's not in range.
             unit.target = None
 
     def prepare_velocity(self, unit: Unit) -> np.ndarray:
         if unit.target is None:
             closest_target = min(((u, d) for u, d in unit.potential_targets
                                   if u.hp > 0
-                                  and d < unit.minimum_scan_range + u.radius),
+                                  and (d < unit.minimum_scan_range + u.radius
+                                       or u.target == unit)),
                                  key=lambda p: p[1], default=None)
 
-            if closest_target is None \
-                    or not unit.has_within_scan_range(closest_target[0]):
+            if closest_target is None:
                 return self.move_command.prepare_velocity(unit)
             unit.target = closest_target[0]
         return AttackUnitCommand(unit.target).prepare_velocity(unit)

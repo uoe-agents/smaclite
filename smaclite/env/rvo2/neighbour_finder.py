@@ -7,7 +7,7 @@ from sklearn.neighbors import KDTree
 from smaclite.env.units.unit import Unit
 
 
-class KDTreeFacade:
+class NeighbourFinder:
     def __init__(self):
         self.all_units = []
         self.pos_array = None
@@ -21,16 +21,17 @@ class KDTreeFacade:
         if not self.all_units:
             return
         self.all_units_list = list(self.all_units.values())
-        self.kd_tree = KDTree(np.vstack([u.pos for u in self.all_units_list]))
+        self.kd_tree = KDTree([u.pos for u in self.all_units_list])
 
     def query_radius(self, units: List[Unit],
                      radius: Union[List[float], float],
                      return_distance: bool = False):
         if type(radius) is list:
             assert len(radius) == len(units)
-        if not units or not self.all_units:
+        if not units:
             return []
-        self.update()
+        if not self.all_units:
+            return [[] for _ in range(len(units))]
         poses = [unit.pos for unit in units]
         neighbour_idx_lists = \
             self.kd_tree.query_radius(poses, radius,
