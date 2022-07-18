@@ -3,7 +3,7 @@ from smaclite.env.units.unit_type import UnitType
 from smaclite.env.maps.map import Faction
 
 TICKS_PER_SECOND = 16
-GAME_TICK_TIME = 1 / TICKS_PER_SECOND  # 30 ticks per second
+GAME_TICK_TIME = 1 / TICKS_PER_SECOND
 SHIELD_REGEN = 2
 
 

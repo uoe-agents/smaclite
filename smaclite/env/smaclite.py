@@ -334,6 +334,7 @@ class SMACliteEnv(gym.Env):
         # Enemy features
         base_offset = 4
         for enemy, distance in visible_enemies:
+            assert distance < AGENT_SIGHT_RANGE
             if enemy.hp == 0:
                 continue
             dpos = enemy.pos - unit.pos
@@ -355,6 +356,7 @@ class SMACliteEnv(gym.Env):
         base_offset += self.n_enemies * self.enemy_feat_size
         # Ally features
         for ally, distance in visible_allies:
+            assert distance < AGENT_SIGHT_RANGE
             if ally == unit or ally.hp == 0:
                 continue
             dpos = ally.pos - unit.pos
@@ -396,8 +398,8 @@ class SMACliteEnv(gym.Env):
         check_value = MOVE_AMOUNT / 2
         dpos = direction.dx_dy
         npos = unit.pos + dpos * check_value
-        return 0 <= npos[0] < self.map_info.width \
-            and 0 <= npos[1] < self.map_info.height \
+        return 0 <= npos[1] < self.map_info.width \
+            and 0 <= npos[0] < self.map_info.height \
             and self.map_info.terrain[int(npos[1])][int(npos[0])] \
             == TerrainType.NORMAL
 
