@@ -1,12 +1,12 @@
 import time
-
 from typing import List
-from smaclite.env.maps.map import Faction, MapInfo, TerrainType
-import pygame
 
+import pygame
+from smaclite.env.maps.map import Faction, MapInfo
 from smaclite.env.units.unit import Unit
 from smaclite.env.units.unit_command import AttackMoveCommand, MoveCommand
-from smaclite.env.units.unit_type import UnitType
+from smaclite.env.units.unit_type import StandardUnit
+from smaclite.env.util.terrain import TerrainType
 
 TILE_SIZE = 32
 TERRAIN_COLORS = {
@@ -19,11 +19,11 @@ FACTION_COLORS = {
     Faction.ENEMY: (232, 93, 96),
 }
 UNIT_TYPE_ABBREVIATIONS = {
-    UnitType.MARINE: "mrn",
-    UnitType.ZEALOT: "zlt",
-    UnitType.STALKER: "stl",
-    UnitType.ZERGLING: "zrg",
-    UnitType.MEDIVAC: "mdv",
+    StandardUnit.MARINE: "mrn",
+    StandardUnit.ZEALOT: "zlt",
+    StandardUnit.STALKER: "stl",
+    StandardUnit.ZERGLING: "zrg",
+    StandardUnit.MEDIVAC: "mdv",
 }
 RENDER_FPS = 60
 
@@ -66,7 +66,7 @@ class Renderer:
             pygame.draw.circle(canvas, color, center, radius)
             main_font_size = int(radius * 0.9)
             if unit.type not in self.fonts:
-                text = UNIT_TYPE_ABBREVIATIONS[unit.type]
+                text = UNIT_TYPE_ABBREVIATIONS.get(unit.type, "CST")
                 font = pygame.font.SysFont("Monospace", main_font_size) \
                     .render(text, True, (0, 0, 0))
                 self.fonts[unit.type] = font

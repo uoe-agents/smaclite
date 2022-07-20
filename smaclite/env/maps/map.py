@@ -1,19 +1,15 @@
+import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Tuple
 
-from smaclite.env.units.unit_type import UnitType
+from smaclite.env.units.unit_type import StandardUnit, UnitType
+from smaclite.env.util.terrain import TERRAIN_PRESETS, TerrainPreset, TerrainType
 
 
 class Faction(Enum):
-    ALLY = 1
-    ENEMY = 2
-
-
-class TerrainType(Enum):
-    NORMAL = 1
-    CLIFF = 2
-    NONE = 3
+    ALLY = 'ALLY'
+    ENEMY = 'ENEMY'
 
 
 @dataclass
@@ -31,7 +27,7 @@ class MapInfo(object):
     num_enemy_units: int
     groups: List[Group]
     attack_point: Tuple[int, int]
-    terrain: List[List[int]]
+    terrain: List[List[TerrainType]]
     ally_has_shields: bool
     enemy_has_shields: bool
     width: int = 32
@@ -39,12 +35,39 @@ class MapInfo(object):
     num_unit_types: int = 0  # note: 0 for single-type maps
     unit_type_ids: Dict[UnitType, int] = None
 
+    @classmethod
+    def from_file(cls, filename):
+        with open(filename) as f:
+            map_info_dict = json.load(f)
+        custom_unit_path = map_info_dict.get('custom_unit_path', '.')
+        if 'custom_unit_path' in map_info_dict:
+            del map_info_dict['custom_unit_path']
+        groups = []
+        for group in map_info_dict['groups']:
+            group['faction'] = Faction(group['faction'])
+            group['units'] = [(UnitType.from_str(t, custom_unit_path), c)
+                              for (t, c) in group['units']]
+            groups.append(Group(**group))
+        map_info_dict['groups'] = groups
+        map_info_dict['attack_point'] = tuple(map_info_dict['attack_point'])
+        if "terrain_preset" in map_info_dict:
+            map_info_dict["terrain"] = \
+                TERRAIN_PRESETS[map_info_dict["terrain_preset"]].value
+            del map_info_dict["terrain_preset"]
+        else:
+            for i, row in enumerate(map_info_dict['terrain']):
+                new_row = [None] * len(row)
+                for j, terrain_type in enumerate(row):
+                    new_row[j] = TerrainType(terrain_type)
+                map_info_dict['terrain'][i] = new_row
+        if 'unit_type_ids' in map_info_dict:
+            map_info_dict['unit_type_ids'] = \
+                {UnitType.from_str(k, custom_unit_path): v
+                 for k, v in group['units'].items()}
 
-class TerrainPreset(Enum):
-    SIMPLE = [*[[TerrainType.NONE for _ in range(32)] for _ in range(8)],
-              *[[TerrainType.NORMAL for _ in range(32)] for _ in range(16)],
-              *[[TerrainType.NONE for _ in range(32)] for _ in range(8)]
-              ]
+        if map_info_dict['num_unit_types'] == 1:
+            map_info_dict['num_unit_types'] = 0
+        return cls(**map_info_dict)
 
 
 class MapPreset(Enum):
@@ -64,8 +87,8 @@ class MapPreset(Enum):
         num_allied_units=10,
         num_enemy_units=11,
         groups=[
-            Group(9, 16, Faction.ALLY, [(UnitType.MARINE, 10)]),
-            Group(23, 16, Faction.ENEMY, [(UnitType.MARINE, 11)])
+            Group(9, 16, Faction.ALLY, [(StandardUnit.MARINE, 10)]),
+            Group(23, 16, Faction.ENEMY, [(StandardUnit.MARINE, 11)])
         ],
         attack_point=(9, 16),
         terrain=TerrainPreset.SIMPLE.value,
@@ -78,8 +101,8 @@ class MapPreset(Enum):
         num_allied_units=27,
         num_enemy_units=30,
         groups=[
-            Group(9, 16, Faction.ALLY, [(UnitType.MARINE, 27)]),
-            Group(23, 16, Faction.ENEMY, [(UnitType.MARINE, 30)])
+            Group(9, 16, Faction.ALLY, [(StandardUnit.MARINE, 27)]),
+            Group(23, 16, Faction.ENEMY, [(StandardUnit.MARINE, 30)])
         ],
         attack_point=(9, 16),
         terrain=TerrainPreset.SIMPLE.value,
@@ -92,10 +115,10 @@ class MapPreset(Enum):
         num_allied_units=8,
         num_enemy_units=9,
         groups=[
-            Group(9, 16, Faction.ALLY, [(UnitType.STALKER, 3),
-                                        (UnitType.ZEALOT, 5)]),
-            Group(23, 16, Faction.ENEMY, [(UnitType.STALKER, 3),
-                                          (UnitType.ZEALOT, 6)])
+            Group(9, 16, Faction.ALLY, [(StandardUnit.STALKER, 3),
+                                        (StandardUnit.ZEALOT, 5)]),
+            Group(23, 16, Faction.ENEMY, [(StandardUnit.STALKER, 3),
+                                          (StandardUnit.ZEALOT, 6)])
         ],
         attack_point=(9, 16),
         terrain=TerrainPreset.SIMPLE.value,
@@ -103,8 +126,8 @@ class MapPreset(Enum):
         ally_has_shields=True,
         enemy_has_shields=True,
         unit_type_ids={
-            UnitType.STALKER: 0,
-            UnitType.ZEALOT: 1,
+            StandardUnit.STALKER: 0,
+            StandardUnit.ZEALOT: 1,
         }
     )
     MAP_2S3Z = MapInfo(
@@ -112,10 +135,10 @@ class MapPreset(Enum):
         num_allied_units=5,
         num_enemy_units=5,
         groups=[
-            Group(9, 16, Faction.ALLY, [(UnitType.STALKER, 2),
-                                        (UnitType.ZEALOT, 3)]),
-            Group(23, 16, Faction.ENEMY, [(UnitType.STALKER, 2),
-                                            (UnitType.ZEALOT, 3)])
+            Group(9, 16, Faction.ALLY, [(StandardUnit.STALKER, 2),
+                                        (StandardUnit.ZEALOT, 3)]),
+            Group(23, 16, Faction.ENEMY, [(StandardUnit.STALKER, 2),
+                                          (StandardUnit.ZEALOT, 3)])
         ],
         attack_point=(9, 16),
         terrain=TerrainPreset.SIMPLE.value,
@@ -123,8 +146,7 @@ class MapPreset(Enum):
         ally_has_shields=True,
         enemy_has_shields=True,
         unit_type_ids={
-            UnitType.STALKER: 0,
-            UnitType.ZEALOT: 1,
+            StandardUnit.STALKER: 0,
+            StandardUnit.ZEALOT: 1,
         }
     )
-

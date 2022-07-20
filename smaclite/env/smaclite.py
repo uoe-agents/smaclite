@@ -1,17 +1,19 @@
-from enum import Enum
 from typing import Dict, List, Tuple
 
 import gym
 import numpy as np
 
-from smaclite.env.maps.map import Faction, Group, MapInfo, TerrainType
+from smaclite.env.maps.map import Faction, Group, MapInfo
 from smaclite.env.rvo2.neighbour_finder import NeighbourFinder
+from smaclite.env.rvo2.static_obstacle import StaticObstacle
 from smaclite.env.rvo2.velocity_updater import VelocityUpdater
 from smaclite.env.units.unit import Unit
 from smaclite.env.units.unit_command import (AttackMoveCommand,
                                              AttackUnitCommand, MoveCommand,
                                              NoopCommand, StopCommand)
-from smaclite.env.units.unit_type import CombatType, UnitType
+from smaclite.env.units.unit_type import CombatType, StandardUnit, UnitType
+from smaclite.env.util.direction import Direction
+from smaclite.env.util.terrain import TerrainType
 
 GROUP_BUFFER = 0.05
 AGENT_SIGHT_RANGE = 9
@@ -21,23 +23,6 @@ MOVE_AMOUNT = 2
 STEP_MUL = 8
 REWARD_WIN = 200
 REWARD_KILL = 10
-DIRECTION_TO_MOVEMENT = {
-    0: np.array([0, 1]),
-    1: np.array([0, -1]),
-    2: np.array([1, 0]),
-    3: np.array([-1, 0]),
-}
-
-
-class Direction(Enum):
-    @property
-    def dx_dy(self) -> np.ndarray:
-        return DIRECTION_TO_MOVEMENT[self.value]
-
-    NORTH = 0
-    SOUTH = 1
-    EAST = 2
-    WEST = 3
 
 
 class SMACliteEnv(gym.Env):
@@ -45,7 +30,11 @@ class SMACliteEnv(gym.Env):
     """
     This is the SMAClite environment.
     """
-    def __init__(self, map_info: MapInfo):
+    def __init__(self, map_info: MapInfo = None, map_file: str = None):
+        if map_info is None and map_file is None:
+            raise ValueError("Either map_info or map_file must be provided.")
+        if map_file is not None:
+            map_info = MapInfo.from_file(map_file)
         self.map_info = map_info
         self.n_agents = map_info.num_allied_units
         self.agents: Dict[int, Unit] = []
@@ -57,7 +46,7 @@ class SMACliteEnv(gym.Env):
         self.neighbour_finder_enemy: NeighbourFinder = NeighbourFinder()
         self.neighbour_finder_all: NeighbourFinder = NeighbourFinder()
         num_medivacs = sum(sum(count for t, count in group.units
-                               if t == UnitType.MEDIVAC)
+                               if t == StandardUnit.MEDIVAC)
                            for group in map_info.groups
                            if group.faction == Faction.ALLY)
         # NOTE this has an assumption that medivacs can heal anything but
@@ -69,7 +58,8 @@ class SMACliteEnv(gym.Env):
                                    for group in self.map_info.groups
                                    for type, _ in group.units)
         self.velocity_updater = VelocityUpdater(self.neighbour_finder_all,
-                                                self.max_unit_radius)
+                                                self.max_unit_radius,
+                                                map_info.terrain)
         self.last_actions: np.ndarray = np.zeros(self.n_actions
                                                  * self.n_agents)
         # enemy attackable, distance, x, y, health, shield, unit type
@@ -180,7 +170,7 @@ class SMACliteEnv(gym.Env):
                 for i in range(self.n_agents)]
 
     def get_state(self):
-        state = np.zeros(self.state_size)
+        state = np.zeros(self.state_size, dtype=np.float32)
         for unit in self.agents.values():
             base = unit.id_in_faction * self.ally_state_feat_size
             ally_feats = self.__get_unit_state_features(unit, True)
@@ -232,7 +222,7 @@ class SMACliteEnv(gym.Env):
 
     def __get_unit_state_features(self, unit: Unit, ally: bool):
         lgt = self.ally_state_feat_size if ally else self.enemy_state_feat_size
-        feats = np.zeros(lgt)
+        feats = np.zeros(lgt, dtype=np.float32)
         if unit.hp == 0:
             return feats
         has_shields = self.map_info.ally_has_shields if ally else \
@@ -270,7 +260,7 @@ class SMACliteEnv(gym.Env):
         return actions
 
     def __get_obs(self):
-        dead_obs = np.zeros(self.obs_size)
+        dead_obs = np.zeros(self.obs_size, dtype=np.float32)
         obs = [None for _ in range(self.n_agents)]
         agents = [None for _ in range(len(self.agents))]
         idx = 0

@@ -5,12 +5,15 @@ import numpy as np
 
 import smaclite  # noqa
 
-RENDER = False
+RENDER = True
 
 
 def main():
+    map_file = "smaclite/env/maps/smaclite_maps/example_custom_map.json"
     # np.random.seed(2)
-    env = gym.make("smaclite/2s3z-v0")
+    # env = gym.make("smaclite/2s3z-v0")
+    env = gym.make("smaclite/custom-v0",
+                   map_file=map_file)
 
     episode_num = 20
     total_time = 0
