@@ -1,0 +1,11 @@
+{
+    "hp": 45,
+    "armor": 0,
+    "damage": 6,
+    "cooldown": 0.61,
+    "speed": 3.15,
+    "attack_range": 5,
+    "sight_range": 9,
+    "size": 0.75,
+    "attributes": ["LIGHT", "BIOLOGICAL"]
+}

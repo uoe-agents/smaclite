@@ -1,0 +1,11 @@
+{
+    "hp": 35,
+    "armor": 0,
+    "damage": 5,
+    "cooldown": 0.497,
+    "speed": 4.13,
+    "attack_range": "MELEE",
+    "sight_range": 8,
+    "size": 0.75,
+    "attributes": ["LIGHT", "BIOLOGICAL"]
+}

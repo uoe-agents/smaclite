@@ -4,7 +4,7 @@ from smaclite.env.rvo2.neighbour_finder import NeighbourFinder
 import smaclite.env.rvo2.rvo2 as rvo2
 from smaclite.env.rvo2.static_obstacle import StaticObstacle
 from smaclite.env.units.unit import Unit
-from smaclite.env.util.terrain import TerrainType
+from smaclite.env.terrain.terrain import TerrainType
 
 
 class VelocityUpdater:
@@ -13,7 +13,6 @@ class VelocityUpdater:
         self.kd_tree = kd_tree
         self.max_radius = max_radius
         self.obstacles = list(StaticObstacle.from_terrain(terrain))
-        print(self.obstacles)
 
     def compute_new_velocities(self, all_units: Dict[int, Unit]):
         all_units_list = list(all_units.values())

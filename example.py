@@ -11,9 +11,7 @@ RENDER = True
 def main():
     map_file = "smaclite/env/maps/smaclite_maps/example_custom_map.json"
     # np.random.seed(2)
-    # env = gym.make("smaclite/2s3z-v0")
-    env = gym.make("smaclite/custom-v0",
-                   map_file=map_file)
+    env = gym.make("smaclite/3s5z_vs_3s6z-v0")
 
     episode_num = 20
     total_time = 0

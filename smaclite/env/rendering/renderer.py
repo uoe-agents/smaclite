@@ -6,7 +6,7 @@ from smaclite.env.maps.map import Faction, MapInfo
 from smaclite.env.units.unit import Unit
 from smaclite.env.units.unit_command import AttackMoveCommand, MoveCommand
 from smaclite.env.units.unit_type import StandardUnit
-from smaclite.env.util.terrain import TerrainType
+from smaclite.env.terrain.terrain import TerrainType
 
 TILE_SIZE = 32
 TERRAIN_COLORS = {

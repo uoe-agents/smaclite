@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 from smaclite.env.units.unit import Unit
 from smaclite.env.util.direction import Direction
-from smaclite.env.util.terrain import TerrainType
+from smaclite.env.terrain.terrain import TerrainType
 
 
 @dataclass

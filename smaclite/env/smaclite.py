@@ -13,7 +13,7 @@ from smaclite.env.units.unit_command import (AttackMoveCommand,
                                              NoopCommand, StopCommand)
 from smaclite.env.units.unit_type import CombatType, StandardUnit, UnitType
 from smaclite.env.util.direction import Direction
-from smaclite.env.util.terrain import TerrainType
+from smaclite.env.terrain.terrain import TerrainType
 
 GROUP_BUFFER = 0.05
 AGENT_SIGHT_RANGE = 9

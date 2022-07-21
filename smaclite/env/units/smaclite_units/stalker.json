@@ -1,0 +1,13 @@
+{
+    "hp": 80,
+    "armor": 1,
+    "shield": 80,
+    "damage": 13,
+    "cooldown": 1.34,
+    "speed": 4.13,
+    "attack_range": 6,
+    "sight_range": 10,
+    "size": 1.25,
+    "attributes": ["ARMORED", "MECHANICAL"],
+    "bonuses": {"ARMORED": 5}
+}
