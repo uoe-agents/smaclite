@@ -9,5 +9,6 @@
     "sight_range": 10,
     "size": 1.25,
     "attributes": ["ARMORED", "MECHANICAL"],
-    "bonuses": {"ARMORED": 5}
+    "bonuses": {"ARMORED": 5},
+    "valid_targets": ["GROUND", "AIR"]
 }

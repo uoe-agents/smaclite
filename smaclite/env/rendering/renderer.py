@@ -1,12 +1,12 @@
-import time
 from typing import List
 
 import pygame
 from smaclite.env.maps.map import Faction, MapInfo
-from smaclite.env.units.unit import Unit
-from smaclite.env.units.unit_command import AttackMoveCommand, MoveCommand
-from smaclite.env.units.unit_type import StandardUnit
 from smaclite.env.terrain.terrain import TerrainType
+from smaclite.env.units.combat_type import CombatType
+from smaclite.env.units.unit import Unit
+from smaclite.env.units.unit_command import MoveCommand
+from smaclite.env.units.unit_type import StandardUnit
 
 TILE_SIZE = 32
 TERRAIN_COLORS = {
@@ -19,11 +19,14 @@ FACTION_COLORS = {
     Faction.ENEMY: (232, 93, 96),
 }
 UNIT_TYPE_ABBREVIATIONS = {
+    StandardUnit.BANELING: "bnl",
+    StandardUnit.COLOSSUS: "cls",
+    StandardUnit.MARAUDER: "mrd",
     StandardUnit.MARINE: "mrn",
-    StandardUnit.ZEALOT: "zlt",
-    StandardUnit.STALKER: "stl",
-    StandardUnit.ZERGLING: "zrg",
     StandardUnit.MEDIVAC: "mdv",
+    StandardUnit.STALKER: "stl",
+    StandardUnit.ZEALOT: "zlt",
+    StandardUnit.ZERGLING: "zrg",
 }
 RENDER_FPS = 60
 
@@ -35,7 +38,6 @@ class Renderer:
         self.fonts = {}
 
     def render(self, map_info: MapInfo, units: List[Unit]):
-        # time.sleep(0.1)
         if self.window is None:
             pygame.init()
             pygame.display.init()
@@ -48,21 +50,22 @@ class Renderer:
                                  TILE_SIZE * map_info.height),
                                 pygame.SRCALPHA)
         for x in range(map_info.width):
-            for y in range(map_info.height):
+            for y in (range(map_info.height)):
+                real_y = map_info.height - y - 1
                 terrain_type = map_info.terrain[y][x]
                 color = TERRAIN_COLORS[terrain_type]
 
                 pygame.draw.rect(canvas, color,
                                  pygame.Rect((TILE_SIZE * x,
-                                              TILE_SIZE * y),
+                                              TILE_SIZE * real_y),
                                              (TILE_SIZE, TILE_SIZE))),
 
-        for unit in units:
+        for unit in sorted(units, key=lambda u: u.plane.z):
             if unit.hp == 0:
                 continue
             color = FACTION_COLORS[unit.faction]
             radius = TILE_SIZE * unit.radius
-            center = np_to_pygame(unit.pos)
+            center = np_to_pygame(unit.pos, map_info.height)
             pygame.draw.circle(canvas, color, center, radius)
             main_font_size = int(radius * 0.9)
             if unit.type not in self.fonts:
@@ -77,9 +80,11 @@ class Renderer:
             hp_font = pygame.font.SysFont("Monospace",
                                           int(radius) // 2) \
                 .render(hp_str, True, (0, 0, 0), (255, 255, 255, 230))
+            cd_text = unit.cooldown if unit.combat_type == CombatType.DAMAGE \
+                else unit.energy
             cd_font = pygame.font.SysFont("Monospace",
                                           int(radius) // 2) \
-                .render(f"{unit.cooldown:.02f}", True, (0, 0, 0),
+                .render(f"{cd_text:.02f}", True, (0, 0, 0),
                         (255, 255, 255, 230))
             canvas.blit(font, font.get_rect(center=center))
             canvas.blit(hp_font,
@@ -89,15 +94,13 @@ class Renderer:
                         cd_font.get_rect(center=(center[0],
                                                  center[1] - main_font_size)))
             if unit.target is not None:
-                pygame.draw.line(canvas, (0, 0, 255),
-                                 np_to_pygame(unit.pos),
-                                 np_to_pygame(unit.target.pos))
-            elif isinstance(unit.command, AttackMoveCommand):
-                pygame.draw.line(canvas, (255, 0, 0),
-                                 np_to_pygame(unit.pos),
-                                 np_to_pygame(unit.command.pos))
+                color = FACTION_COLORS[unit.faction]
+                pygame.draw.line(canvas, color,
+                                 np_to_pygame(unit.pos, map_info.height),
+                                 np_to_pygame(unit.target.pos,
+                                              map_info.height))
             elif isinstance(unit.command, MoveCommand):
-                pygame.draw.line(canvas, (0, 255, 0),
+                pygame.draw.line(canvas, (0, 0, 255),
                                  np_to_pygame(unit.pos),
                                  np_to_pygame(unit.command.pos))
 
@@ -117,5 +120,6 @@ class Renderer:
                                         TILE_SIZE * map_info.height))
 
 
-def np_to_pygame(np_vec):
-    return tuple(TILE_SIZE * np_vec.astype(float))
+def np_to_pygame(np_vec, height):
+    return (TILE_SIZE * np_vec[0].astype(float),
+            TILE_SIZE * (height - np_vec[1].astype(float)))

@@ -1,17 +1,15 @@
-from dataclasses import dataclass
-
-from enum import Enum
 import json
 import os
+from dataclasses import dataclass
+from enum import Enum
 from typing import Dict, Set
+
+import smaclite.env.units.targetters.targetter as t
+from smaclite.env.units.combat_type import CombatType
+from smaclite.env.util.plane import Plane
 
 # NOTE 0.25 for banelings
 MELEE_ATTACK_RANGE = 0.1
-
-
-class CombatType(Enum):
-    DAMAGE = 'DAMAGE'
-    HEALING = 'HEALING'
 
 
 class Attribute(Enum):
@@ -25,8 +23,12 @@ class Attribute(Enum):
     HEROIC = 'HEROIC'
 
 
+TARGETTER_CACHE: Dict[str, t.Targetter] = {}
+
+
 @dataclass
 class UnitStats(object):
+    name: str
     hp: int
     armor: int
     damage: int
@@ -36,11 +38,15 @@ class UnitStats(object):
     sight_range: int
     size: float
     attributes: Set[Attribute]
+    valid_targets: Set[Plane]
     shield: int = 0
+    energy: int = 0
+    starting_energy: int = 0
     attacks: int = 1
     combat_type: CombatType = CombatType.DAMAGE
     minimum_scan_range: int = 5
     bonuses: Dict[Attribute, float] = None
+    plane: Plane = Plane.GROUND
 
     @classmethod
     def from_file(cls, filename, custom_unit_path):
@@ -51,17 +57,24 @@ class UnitStats(object):
             filename += ".json"
         with open(filename) as f:
             stats_dict = json.load(f)
+        stats_dict['name'] = os.path.splitext(os.path.basename(filename))[0]
         if stats_dict['attack_range'] == "MELEE":
             stats_dict['attack_range'] = MELEE_ATTACK_RANGE
-        if 'attributes' in stats_dict:
-            stats_dict['attributes'] = set(map(Attribute,
-                                               stats_dict['attributes']))
+        stats_dict['attributes'] = set(map(Attribute,
+                                           stats_dict['attributes']))
+        stats_dict['valid_targets'] = set(map(Plane,
+                                              stats_dict['valid_targets']))
         if 'bonuses' in stats_dict:
             stats_dict['bonuses'] = {Attribute(k): v for k, v
                                      in stats_dict['bonuses'].items()}
         if 'combat_type' in stats_dict:
             stats_dict['combat_type'] = CombatType(stats_dict['combat_type'])
-
+        if 'plane' in stats_dict:
+            stats_dict['plane'] = Plane(stats_dict['plane'])
+        targetter_kwargs = stats_dict.pop('targetter_kwargs', {})
+        TARGETTER_CACHE[stats_dict['name']] = \
+            t.TargetterType[stats_dict.pop(
+                'targetter', 'STANDARD')].value(**targetter_kwargs)
         return cls(**stats_dict)
 
 
@@ -103,14 +116,17 @@ class StandardUnit(UnitType, Enum):
 
     # Zerg units
     ZERGLING = UnitStats.from_file("zergling", STANDARD_UNIT_PATH)
+    BANELING = UnitStats.from_file("baneling", STANDARD_UNIT_PATH)
 
     # Terran units
     MARINE = UnitStats.from_file("marine", STANDARD_UNIT_PATH)
     MEDIVAC = UnitStats.from_file("medivac", STANDARD_UNIT_PATH)
+    MARAUDER = UnitStats.from_file("marauder", STANDARD_UNIT_PATH)
 
     # Protoss units
     ZEALOT = UnitStats.from_file("zealot", STANDARD_UNIT_PATH)
     STALKER = UnitStats.from_file("stalker", STANDARD_UNIT_PATH)
+    COLOSSUS = UnitStats.from_file("colossus", STANDARD_UNIT_PATH)
 
 
 STANDARD_UNIT_TYPES = {unit_type.name: unit_type

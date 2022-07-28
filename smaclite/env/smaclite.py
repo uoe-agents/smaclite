@@ -1,3 +1,4 @@
+import random
 from typing import Dict, List, Tuple
 
 import gym
@@ -5,15 +6,14 @@ import numpy as np
 
 from smaclite.env.maps.map import Faction, Group, MapInfo
 from smaclite.env.rvo2.neighbour_finder import NeighbourFinder
-from smaclite.env.rvo2.static_obstacle import StaticObstacle
 from smaclite.env.rvo2.velocity_updater import VelocityUpdater
+from smaclite.env.terrain.terrain import TerrainType
 from smaclite.env.units.unit import Unit
 from smaclite.env.units.unit_command import (AttackMoveCommand,
                                              AttackUnitCommand, MoveCommand,
                                              NoopCommand, StopCommand)
 from smaclite.env.units.unit_type import CombatType, StandardUnit, UnitType
 from smaclite.env.util.direction import Direction
-from smaclite.env.terrain.terrain import TerrainType
 
 GROUP_BUFFER = 0.05
 AGENT_SIGHT_RANGE = 9
@@ -30,7 +30,13 @@ class SMACliteEnv(gym.Env):
     """
     This is the SMAClite environment.
     """
-    def __init__(self, map_info: MapInfo = None, map_file: str = None):
+    def __init__(self,
+                 map_info: MapInfo = None,
+                 map_file: str = None,
+                 seed=None):
+        if seed is not None:
+            np.random.seed(seed)
+            random.seed(seed)
         if map_info is None and map_file is None:
             raise ValueError("Either map_info or map_file must be provided.")
         if map_file is not None:
@@ -187,6 +193,14 @@ class SMACliteEnv(gym.Env):
 
         return np.array(state)
 
+    def __get_targetter_neighbour_finder(self, unit: Unit):
+        is_ally = unit.faction == Faction.ALLY
+        is_healer = unit.combat_type == CombatType.HEALING
+        if is_ally ^ is_healer:
+            return self.neighbour_finder_enemy
+        else:
+            return self.neighbour_finder_ally
+
     def __world_step(self):
         if self.renderer is not None:
             self.render()
@@ -197,23 +211,68 @@ class SMACliteEnv(gym.Env):
         # but might change in the future.
         if attackmoving_units := [enemy for enemy
                                   in self.enemies.values()
-                                  if enemy.target is None]:
+                                  if enemy.combat_type == CombatType.DAMAGE
+                                  and enemy.target is None]:
             attackmoving_radii = [unit.minimum_scan_range
                                   + self.max_unit_radius
                                   for unit in attackmoving_units]
             attackmoving_targets = \
                 self.neighbour_finder_ally.query_radius(attackmoving_units,
                                                         attackmoving_radii,
-                                                        True)
+                                                        return_distance=True,
+                                                        targetting_mode=True)
             for unit, targets in zip(attackmoving_units, attackmoving_targets):
                 unit.potential_targets = targets
             for unit in self.agents.values():
-                if unit.target is not None:
+                if unit.target is not None \
+                        and unit.plane in unit.target.valid_targets:
                     unit.target.potential_targets.append((unit, 2e9))
+        if healmoving_units := [enemy for enemy
+                                in self.enemies.values()
+                                if enemy.combat_type == CombatType.HEALING
+                                and enemy.target is None]:
+            healmoving_radii = [unit.minimum_scan_range
+                                + self.max_unit_radius
+                                for unit in healmoving_units]
+            attackhealing_targets = \
+                self.neighbour_finder_enemy.query_radius(healmoving_units,
+                                                         healmoving_radii,
+                                                         return_distance=True,
+                                                         targetting_mode=True)
+            for unit, targets in zip(healmoving_units, attackhealing_targets):
+                unit.potential_targets = targets
+        if any(unit.combat_type == CombatType.HEALING
+               for unit in self.agents.values()) \
+                and (nonpriority_attackmoving := [enemy for enemy
+                                                  in self.enemies.values()
+                                                  if enemy.combat_type
+                                                  == CombatType.DAMAGE
+                                                  and enemy.target is not None
+                                                  and enemy.target.combat_type
+                                                  != CombatType.HEALING]):
+            attackmoving_radii = [unit.minimum_scan_range
+                                  + self.max_unit_radius
+                                  for unit in nonpriority_attackmoving]
+            attackmoving_targets = \
+                self.neighbour_finder_ally.query_radius(
+                    nonpriority_attackmoving,
+                    attackmoving_radii,
+                    return_distance=True,
+                    targetting_mode=True)
+            for unit, targets in zip(nonpriority_attackmoving,
+                                     attackmoving_targets):
+                unit.priority_targets = targets
         for unit in self.all_units.values():
             unit.prepare_velocity()
         self.velocity_updater.compute_new_velocities(self.all_units)
-        reward = sum(unit.game_step() for unit in self.all_units.values())
+
+        shuffled_units = list(self.all_units.values())
+        random.shuffle(shuffled_units)
+        reward = sum(unit.game_step(
+            neighbour_finder=self.__get_targetter_neighbour_finder(unit),
+            max_radius=self.max_unit_radius
+            )
+                     for unit in shuffled_units)
         self.__update_deaths()
         self.neighbour_finder_all.update()
         self.neighbour_finder_ally.update()
@@ -229,8 +288,10 @@ class SMACliteEnv(gym.Env):
             self.map_info.enemy_has_shields
         feats[0] = unit.hp / unit.max_hp
         if ally:
-            # TODO adjust for medivacs
-            feats[1] = unit.cooldown / unit.max_cooldown
+            if unit.combat_type != CombatType.HEALING:
+                feats[1] = unit.cooldown / unit.max_cooldown
+            else:
+                feats[1] = unit.energy / unit.max_energy
         dx, dy = unit.pos - self.cx_cy
         feats[1 + ally] = dx / self.map_info.width
         feats[2 + ally] = dy / self.map_info.height
@@ -462,6 +523,8 @@ class SMACliteEnv(gym.Env):
         if 2 <= action <= 5:
             dpos = Direction(action - 2).dx_dy * MOVE_AMOUNT
             return MoveCommand(unit.pos + dpos)
+        if unit.combat_type == CombatType.HEALING:
+            return AttackUnitCommand(self.agents[action - 6])
         return AttackUnitCommand(self.enemies[action - 6])
 
     def __update_deaths(self):

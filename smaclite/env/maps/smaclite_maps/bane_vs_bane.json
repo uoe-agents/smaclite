@@ -1,0 +1,48 @@
+{
+    "name": "bane_vs_bane",
+    "num_allied_units": 24,
+    "num_enemy_units": 24,
+    "groups": [
+        {
+            "x": 16,
+            "y": 24,
+            "faction": "ENEMY",
+            "units": {
+                "BANELING": 4
+            }
+        },
+        {
+            "x": 16,
+            "y": 21,
+            "faction": "ENEMY",
+            "units": {
+                "ZERGLING": 20
+            }
+        },
+        {
+            "x": 16,
+            "y": 11,
+            "faction": "ALLY",
+            "units": {
+                "ZERGLING": 20
+            }
+        },
+        {
+            "x": 16,
+            "y": 8,
+            "faction": "ALLY",
+            "units": {
+                "BANELING": 4
+            }
+        }
+    ],
+    "attack_point": [16, 8],
+    "terrain_preset": "OCTAGON",
+    "num_unit_types": 2,
+    "ally_has_shields": false,
+    "enemy_has_shields": false,
+    "unit_type_ids": {
+        "BANELING": 0,
+        "ZERGLING": 1
+    }
+}

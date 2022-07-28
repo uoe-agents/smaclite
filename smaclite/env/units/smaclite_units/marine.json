@@ -7,5 +7,6 @@
     "attack_range": 5,
     "sight_range": 9,
     "size": 0.75,
-    "attributes": ["LIGHT", "BIOLOGICAL"]
+    "attributes": ["LIGHT", "BIOLOGICAL"],
+    "valid_targets": ["GROUND", "AIR"]
 }

@@ -1,5 +1,7 @@
 {
     "hp": 150,
+    "energy": 200,
+    "starting_energy": 50,
     "armor": 1,
     "damage": 0,
     "cooldown": 0,
@@ -8,5 +10,8 @@
     "attack_range": 4,
     "sight_range": 11,
     "combat_type": "HEALING",
-    "attributes": ["ARMORED", "MECHANICAL"]
+    "attributes": ["ARMORED", "MECHANICAL"],
+    "targetter": "HEAL",
+    "plane": "AIR",
+    "valid_targets": ["GROUND"]
 }

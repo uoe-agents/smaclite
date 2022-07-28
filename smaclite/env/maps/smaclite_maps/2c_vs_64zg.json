@@ -1,0 +1,28 @@
+{
+    "name": "2c_vs_64zg",
+    "num_allied_units": 2,
+    "num_enemy_units": 64,
+    "groups": [
+        {
+            "x": 16,
+            "y": 16,
+            "faction": "ALLY",
+            "units": {
+                "COLOSSUS": 2
+            }
+        },
+        {
+            "x": 16,
+            "y": 9,
+            "faction": "ENEMY",
+            "units": {
+                "ZERGLING": 64
+            }
+        }
+    ],
+    "attack_point": [16, 16],
+    "terrain_preset": "RAVINE",
+    "num_unit_types": 0,
+    "ally_has_shields": true,
+    "enemy_has_shields": false
+}

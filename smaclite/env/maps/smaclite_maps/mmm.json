@@ -1,0 +1,38 @@
+{
+    "name": "MMM",
+    "num_allied_units": 10,
+    "num_enemy_units": 10,
+    "groups": [
+        {
+            "x": 9,
+            "y": 16,
+            "faction": "ALLY",
+            "units": {
+                "MARINE": 7,
+                "MARAUDER": 2,
+                "MEDIVAC": 1
+            }
+        },
+        {
+            "x": 23,
+            "y": 16,
+            "faction": "ENEMY",
+            "units": {
+                "MARINE": 7,
+                "MARAUDER": 2,
+                "MEDIVAC": 1
+            }
+        }
+    ],
+    "attack_point": [9, 16],
+    "terrain_preset": "SIMPLE",
+    "num_unit_types": 3,
+    "unit_type_ids": {
+        "MARAUDER": 0,
+        "MARINE": 1,
+        "MEDIVAC": 2
+
+    },
+    "ally_has_shields": false,
+    "enemy_has_shields": false
+}

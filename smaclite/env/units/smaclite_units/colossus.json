@@ -1,0 +1,20 @@
+{
+    "hp": 200,
+    "armor": 1,
+    "shield": 150,
+    "damage": 10,
+    "attacks": 2,
+    "cooldown": 1.07,
+    "speed": 3.15,
+    "attack_range": 7,
+    "sight_range": 10,
+    "size": 2,
+    "targetter": "LASER_BEAM",
+    "targetter_kwargs": {
+        "width": 2.8,
+        "height": 0.3
+    },
+    "attributes": ["ARMORED", "MECHANICAL", "MASSIVE"],
+    "bonuses": {"LIGHT": 5},
+    "valid_targets": ["GROUND"]
+}

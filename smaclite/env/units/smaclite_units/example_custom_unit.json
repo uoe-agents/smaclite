@@ -8,5 +8,6 @@
     "sight_range": 999,
     "size": 3,
     "attributes": ["LIGHT", "BIOLOGICAL"],
-    "minimum_scan_range": 100
+    "minimum_scan_range": 100,
+    "valid_targets": ["GROUND", "AIR"]
 }

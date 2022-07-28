@@ -13,10 +13,10 @@ def from_file(name):
                             "smaclite_terrain",
                             f"{name}.slt")
     with open(filename) as f:
-        strs = map(str.strip, f.readlines())
+        strs = list(map(str.strip, f.readlines()))
     return [
         list(map(TerrainType, row))
-        for row in strs
+        for row in reversed(strs)
     ]
 
 
@@ -24,6 +24,8 @@ class TerrainPreset(Enum):
     SIMPLE = from_file('simple')
     CHECKERBOARD = from_file('checkerboard')
     NARROW = from_file('narrow')
+    RAVINE = from_file('ravine')
+    OCTAGON = from_file('octagon')
 
 
 TERRAIN_PRESETS = {t.name: t for t in TerrainPreset}

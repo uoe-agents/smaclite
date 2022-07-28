@@ -18,7 +18,8 @@ class VelocityUpdater:
         all_units_list = list(all_units.values())
         radii = [self.max_radius + unit.radius for unit in all_units_list]
         neighbour_lists = self.kd_tree.query_radius(all_units_list, radii,
-                                                    True)
+                                                    return_distance=True,
+                                                    same_plane_only=True)
         for unit, neighbour_list in zip(all_units_list, neighbour_lists):
             unit.next_velocity = rvo2.compute_new_velocity(unit,
                                                            neighbour_list,

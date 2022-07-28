@@ -7,5 +7,6 @@
     "attack_range": "MELEE",
     "sight_range": 8,
     "size": 0.75,
-    "attributes": ["LIGHT", "BIOLOGICAL"]
+    "attributes": ["LIGHT", "BIOLOGICAL"],
+    "valid_targets": ["GROUND"]
 }

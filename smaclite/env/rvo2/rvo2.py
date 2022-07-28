@@ -4,6 +4,7 @@ import numpy as np
 from smaclite.env.rvo2.static_obstacle import StaticObstacle
 
 from smaclite.env.units.unit import Unit
+from smaclite.env.util.plane import Plane
 
 TAU = 1
 INV_TIME_HORIZON = 1 / TAU
@@ -57,7 +58,9 @@ def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]],
     obst_search_radius_sq = (unit.radius + TAU * unit.max_velocity) ** 2
     obstacle_neighbours = [obstacle for obstacle in static_obstacles
                            if obstacle.distance_sq_to(unit)
-                           < obst_search_radius_sq]
+                           < obst_search_radius_sq] \
+        if unit.plane != Plane.COLOSSUS \
+        else []
     # Static obstacle lines
     for o in obstacle_neighbours:
         for i, o1 in enumerate(o.lines):
@@ -80,7 +83,7 @@ def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]],
             dist_sq_1 = vec_len_sq(rel_pos_1)
             dist_sq_2 = vec_len_sq(rel_pos_2)
 
-            radius_sq = unit.radius ** 2
+            radius_sq = unit.radius_sq
 
             obstacle_vector = o2.point - o1.point
             s = (-rel_pos_1.dot(obstacle_vector)) \
