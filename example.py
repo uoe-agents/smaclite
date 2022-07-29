@@ -9,13 +9,15 @@ RENDER = False
 
 
 def main():
-    env = "MMM"
+    env = "MMM2"
     env = gym.make(f"smaclite/{env}-v0")
     episode_num = 20
     total_time = 0
     total_timesteps = 0
     for i in range(episode_num):
         obs, info = env.reset(return_info=True)
+        if RENDER:
+            env.render()
         done = False
         episode_reward = 0
         timer = time.time()
@@ -29,8 +31,6 @@ def main():
                                  in enumerate(avail_actions[info])
                                  if x]
                 actions.append(int(np.random.choice(avail_indices)))
-            if RENDER:
-                env.render()
                 # time.sleep(1/2)
             timer = time.time()
             obs, reward, done, info = env.step(actions)

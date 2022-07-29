@@ -1,0 +1,36 @@
+{
+    "name": "2s_vs_1sc",
+    "num_allied_units": 2,
+    "num_enemy_units": 1,
+    "groups": [
+        {
+            "x": 13.92,
+            "y": 20.04,
+            "faction": "ENEMY",
+            "units": {
+                "SPINE_CRAWLER": 1
+            }
+        },
+        {
+            "x": 11.12,
+            "y": 10.34,
+            "faction": "ALLY",
+            "units": {
+                "STALKER": 1
+            }
+        },
+        {
+            "x": 16.98,
+            "y": 10.37,
+            "faction": "ALLY",
+            "units": {
+                "STALKER": 1
+            }
+        }
+    ],
+    "attack_point": [13.92, 20.04],
+    "terrain_preset": "PENTAGON",
+    "num_unit_types": 0,
+    "ally_has_shields": true,
+    "enemy_has_shields": false
+}

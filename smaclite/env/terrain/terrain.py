@@ -26,6 +26,9 @@ class TerrainPreset(Enum):
     NARROW = from_file('narrow')
     RAVINE = from_file('ravine')
     OCTAGON = from_file('octagon')
+    CORRIDOR = from_file('corridor')
+    PENTAGON = from_file('pentagon')
+    ALL_GREEN = from_file('all_green')
 
 
 TERRAIN_PRESETS = {t.name: t for t in TerrainPreset}

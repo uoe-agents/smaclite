@@ -76,10 +76,19 @@ class MoveCommand(Command):
         unit.target = None
 
     def prepare_velocity(self, unit: Unit) -> np.ndarray:
+        if unit.max_velocity == 0:
+            return np.zeros(2)
+        if unit.combat_type == CombatType.HEALING:
+            # healers shouldn't overtake allies
+            max_velocity = min((u.max_velocity for u, _
+                                in unit.potential_targets),
+                               default=unit.max_velocity)
+        else:
+            max_velocity = unit.max_velocity
         dpos = self.pos - unit.pos
         distance = np.linalg.norm(dpos)
         return np.zeros(2) if distance == 0 \
-            else dpos * unit.max_velocity / distance
+            else dpos * max_velocity / distance
 
     def execute(self, unit: Unit, **kwargs) -> float:
         return 0

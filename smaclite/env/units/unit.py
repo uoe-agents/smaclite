@@ -19,6 +19,7 @@ class Unit(object):
         self.id_in_faction = idd_in_faction
         self.type = unit_type
         self.max_hp = unit_type.stats.hp
+        self.hp_regen = unit_type.stats.hp_regen
         self.max_shield = unit_type.stats.shield
         self.max_energy = unit_type.stats.energy
         self.hp = self.max_hp
@@ -65,10 +66,7 @@ class Unit(object):
         self.command.clean_up_target(self)
 
     def prepare_velocity(self):
-        if self.max_velocity == 0:
-            self.pref_velocity = np.array([0, 0], dtype=np.float32)
-        else:
-            self.pref_velocity = self.command.prepare_velocity(self)
+        self.pref_velocity = self.command.prepare_velocity(self)
 
     def game_step(self, **kwargs):
         if self.hp == 0:
@@ -90,6 +88,9 @@ class Unit(object):
             self.energy = min(self.energy +
                               ENERGY_PER_SECOND / TICKS_PER_SECOND,
                               self.max_energy)
+        if self.hp_regen and self.hp < self.max_hp:
+            self.hp = min(self.hp + self.hp_regen / TICKS_PER_SECOND,
+                          self.max_hp)
         return self.command.execute(self, **kwargs)
 
     def has_within_attack_range(self, target: 'Unit'):

@@ -1,0 +1,28 @@
+{
+    "name": "3s_vs_5z",
+    "num_allied_units": 3,
+    "num_enemy_units": 5,
+    "groups": [
+        {
+            "x": 9,
+            "y": 16,
+            "faction": "ALLY",
+            "units": {
+                "STALKER": 3
+            }
+        },
+        {
+            "x": 23,
+            "y": 16,
+            "faction": "ENEMY",
+            "units": {
+                "ZEALOT": 5
+            }
+        }
+    ],
+    "attack_point": [9, 16],
+    "terrain_preset": "ALL_GREEN",
+    "num_unit_types": 0,
+    "ally_has_shields": true,
+    "enemy_has_shields": true
+}

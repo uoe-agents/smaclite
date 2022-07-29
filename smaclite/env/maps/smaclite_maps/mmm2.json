@@ -1,7 +1,7 @@
 {
-    "name": "MMM",
+    "name": "MMM2",
     "num_allied_units": 10,
-    "num_enemy_units": 10,
+    "num_enemy_units": 12,
     "groups": [
         {
             "x": 9,
@@ -19,8 +19,8 @@
             "faction": "ENEMY",
             "units": {
                 "MEDIVAC": 1,
-                "MARINE": 7,
-                "MARAUDER": 2
+                "MARINE": 8,
+                "MARAUDER": 3
             }
         }
     ],

@@ -28,7 +28,8 @@ UNIT_TYPE_ABBREVIATIONS = {
     StandardUnit.ZEALOT: "zlt",
     StandardUnit.ZERGLING: "zrg",
 }
-RENDER_FPS = 60
+# Equivalent to the "faster" in-game speed
+RENDER_FPS = 22.4
 
 
 class Renderer:
@@ -66,7 +67,17 @@ class Renderer:
             color = FACTION_COLORS[unit.faction]
             radius = TILE_SIZE * unit.radius
             center = np_to_pygame(unit.pos, map_info.height)
+            pygame.draw.circle(canvas, color, center, radius,
+                               width=2)
+            pygame.draw.circle(canvas, tuple(0.6 * c for c in color),
+                               center, radius - 2)
+            circle_height = unit.hp / unit.max_hp * 2 * radius
+            clip_area = pygame.Rect(center[0] - radius,
+                                    center[1] + radius - circle_height,
+                                    2 * radius, circle_height)
+            canvas.set_clip(clip_area)
             pygame.draw.circle(canvas, color, center, radius)
+            canvas.set_clip(None)
             main_font_size = int(radius * 0.9)
             if unit.type not in self.fonts:
                 text = UNIT_TYPE_ABBREVIATIONS.get(unit.type, "CST")
@@ -101,8 +112,9 @@ class Renderer:
                                               map_info.height))
             elif isinstance(unit.command, MoveCommand):
                 pygame.draw.line(canvas, (0, 0, 255),
-                                 np_to_pygame(unit.pos),
-                                 np_to_pygame(unit.command.pos))
+                                 np_to_pygame(unit.pos, map_info.height),
+                                 np_to_pygame(unit.command.pos,
+                                              map_info.height))
 
         self.window.blit(canvas, canvas.get_rect())
         pygame.event.pump()

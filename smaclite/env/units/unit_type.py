@@ -47,6 +47,7 @@ class UnitStats(object):
     minimum_scan_range: int = 5
     bonuses: Dict[Attribute, float] = None
     plane: Plane = Plane.GROUND
+    hp_regen: float = 0
 
     @classmethod
     def from_file(cls, filename, custom_unit_path):
@@ -117,6 +118,7 @@ class StandardUnit(UnitType, Enum):
     # Zerg units
     ZERGLING = UnitStats.from_file("zergling", STANDARD_UNIT_PATH)
     BANELING = UnitStats.from_file("baneling", STANDARD_UNIT_PATH)
+    SPINE_CRAWLER = UnitStats.from_file("spine_crawler", STANDARD_UNIT_PATH)
 
     # Terran units
     MARINE = UnitStats.from_file("marine", STANDARD_UNIT_PATH)

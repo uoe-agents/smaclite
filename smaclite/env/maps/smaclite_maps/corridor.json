@@ -1,0 +1,28 @@
+{
+    "name": "corridor",
+    "num_allied_units": 6,
+    "num_enemy_units": 24,
+    "groups": [
+        {
+            "x": 27.91,
+            "y": 28.24,
+            "faction": "ENEMY",
+            "units": {
+                "ZERGLING": 24
+            }
+        },
+        {
+            "x": 19.04,
+            "y": 19.12,
+            "faction": "ALLY",
+            "units": {
+                "ZEALOT": 6
+            }
+        }
+    ],
+    "attack_point": [4.47, 4.33],
+    "terrain_preset": "CORRIDOR",
+    "num_unit_types": 0,
+    "ally_has_shields": true,
+    "enemy_has_shields": false
+}

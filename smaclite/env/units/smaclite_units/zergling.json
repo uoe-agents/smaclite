@@ -8,5 +8,6 @@
     "sight_range": 8,
     "size": 0.75,
     "attributes": ["LIGHT", "BIOLOGICAL"],
-    "valid_targets": ["GROUND"]
+    "valid_targets": ["GROUND"],
+    "hp_regen": 0.38
 }

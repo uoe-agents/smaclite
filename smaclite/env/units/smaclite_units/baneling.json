@@ -12,5 +12,6 @@
     "targetter_kwargs": {
         "radius": 2.2
     },
-    "valid_targets": ["GROUND"]
+    "valid_targets": ["GROUND"],
+    "hp_regen": 0.38
 }
