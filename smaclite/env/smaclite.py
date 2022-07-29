@@ -51,15 +51,16 @@ class SMACliteEnv(gym.Env):
         self.neighbour_finder_ally: NeighbourFinder = NeighbourFinder()
         self.neighbour_finder_enemy: NeighbourFinder = NeighbourFinder()
         self.neighbour_finder_all: NeighbourFinder = NeighbourFinder()
-        num_medivacs = sum(sum(count for t, count in group.units
-                               if t == StandardUnit.MEDIVAC)
-                           for group in map_info.groups
-                           if group.faction == Faction.ALLY)
-        # NOTE this has an assumption that medivacs can heal anything but
+        num_healers = sum(sum(count for t, count in group.units
+                              if t.stats.combat_type == CombatType.HEALING)
+                          for group in map_info.groups
+                          if group.faction == Faction.ALLY)
+        # NOTE this has an assumption that healers can heal anything but
         # themselves, which is not exactly true in SC2
-        # hp, cooldown, dx, dy, shields, unit type
-        self.n_actions = 6 + max((self.n_agents - num_medivacs),
-                                 self.n_enemies)
+        num_target_actions = max(self.n_agents - num_healers, self.n_enemies) \
+            if num_healers else self.n_enemies
+
+        self.n_actions = 6 + num_target_actions
         self.max_unit_radius = max(type.radius
                                    for group in self.map_info.groups
                                    for type, _ in group.units)
@@ -70,8 +71,7 @@ class SMACliteEnv(gym.Env):
                                                  * self.n_agents)
         # enemy attackable, distance, x, y, health, shield, unit type
         self.enemy_feat_size = 5 + self.map_info.enemy_has_shields \
-            + self.map_info.num_unit_types \
-
+            + self.map_info.num_unit_types
         # aly visible, distance, x, y, health, shield, unit type
         self.ally_feat_size = 5 + self.map_info.ally_has_shields \
             + self.map_info.num_unit_types
@@ -146,8 +146,7 @@ class SMACliteEnv(gym.Env):
                 continue
             agent = self.agents[i]
             if not avail_actions[i][action]:
-                print(f"ERROR: invalid action for agent {i}: {action}")
-                actions[i] = 1  # change to stop
+                raise ValueError(f"Invalid action for agent {i}: {action}")
             agent.command = self.__get_command(agent, action)
         reward = sum(self.__world_step() for _ in range(STEP_MUL))
         all_enemies_dead = len(self.enemies) == 0
@@ -391,7 +390,7 @@ class SMACliteEnv(gym.Env):
             dpos = enemy.pos - unit.pos
             dx, dy = dpos
             base = base_offset + enemy.id_in_faction * self.enemy_feat_size
-            obs[base] = avail_actions[6 + unit.id_in_faction]
+            obs[base] = avail_actions[6 + enemy.id_in_faction]
             obs[base + 1] = distance / AGENT_SIGHT_RANGE
             obs[base + 2] = dx / AGENT_SIGHT_RANGE
             obs[base + 3] = dy / AGENT_SIGHT_RANGE
