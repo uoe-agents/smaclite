@@ -95,6 +95,7 @@ class MapPreset(Enum):
     MAP_27M_VS_30M = get_standard_map('27m_vs_30m')
     MAP_3S5Z_VS_3S6Z = get_standard_map('3s5z_vs_3s6z')
     MAP_2S3Z = get_standard_map("2s3z")
+    MAP_3S5Z = get_standard_map("3s5z")
     MAP_MMM = get_standard_map("mmm")
     MAP_MMM2 = get_standard_map("mmm2")
     MAP_2C_VS_64ZG = get_standard_map("2c_vs_64zg")
