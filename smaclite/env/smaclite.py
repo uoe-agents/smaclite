@@ -18,7 +18,7 @@ from smaclite.env.util.direction import Direction
 GROUP_BUFFER = 0.05
 AGENT_SIGHT_RANGE = 9
 AGENT_TARGET_RANGE = 6
-AGENT_TARGET_RANGE_SQ = AGENT_SIGHT_RANGE ** 2
+AGENT_TARGET_RANGE_SQ = AGENT_TARGET_RANGE ** 2
 MOVE_AMOUNT = 2
 STEP_MUL = 8
 REWARD_WIN = 200
@@ -305,18 +305,25 @@ class SMACliteEnv(gym.Env):
         assert base + self.map_info.num_unit_types == lgt
         return feats
 
-    def __get_agent_avail_actions(self, unit: Unit):
+    def __get_agent_avail_actions(self, unit: Unit, targets=None):
         assert unit.hp > 0
         actions = np.zeros(self.n_actions)
         actions[1] = 1
         for direction in Direction:
             actions[2 + direction.value] = self.__can_move(unit, direction)
-        targets = self.enemies.values() \
-            if unit.combat_type == CombatType.DAMAGE \
-            else [ally for ally in self.agents.values() if ally != unit]
+        if targets is None:
+            targets = self.enemies.values() \
+                if unit.combat_type == CombatType.DAMAGE \
+                else [ally for ally in self.agents.values() if ally != unit]
+        distance = None
         for target in targets:
+            print(type(target))
+            if type(target) is tuple:
+                target, distance = target
+            if target is unit:
+                continue
             actions[6 + target.id_in_faction] \
-                = self.__can_target(unit, target)
+                = self.__can_target(unit, target, distance=distance)
         return actions
 
     def __get_obs(self):
@@ -354,9 +361,11 @@ class SMACliteEnv(gym.Env):
         return {'avail_actions': self.get_avail_actions(),
                 'state': self.get_state()}
 
-    def __can_target(self, unit: Unit, target: Unit):
+    def __can_target(self, unit: Unit, target: Unit, distance=None):
         if target.hp == 0 or unit.hp == 0:
             return 0
+        if distance is not None:
+            return distance <= AGENT_TARGET_RANGE
         dpos = target.pos - unit.pos
         distance_sq = np.inner(dpos, dpos)
         return distance_sq <= AGENT_TARGET_RANGE_SQ
@@ -376,7 +385,10 @@ class SMACliteEnv(gym.Env):
     def __get_agent_obs(self, unit: Unit,
                         visible_allies: List[Unit],
                         visible_enemies: List[Unit]):
-        avail_actions = self.__get_agent_avail_actions(unit)
+        targets = visible_enemies \
+            if unit.combat_type == CombatType.DAMAGE \
+            else visible_allies
+        avail_actions = self.__get_agent_avail_actions(unit, targets=targets)
         obs = np.zeros(self.obs_size, dtype=np.float32)
         # Movement features
         for direction in Direction:
@@ -407,7 +419,7 @@ class SMACliteEnv(gym.Env):
         # Ally features
         for ally, distance in visible_allies:
             assert distance < AGENT_SIGHT_RANGE
-            if ally == unit or ally.hp == 0:
+            if ally is unit or ally.hp == 0:
                 continue
             dpos = ally.pos - unit.pos
             dx, dy = dpos
