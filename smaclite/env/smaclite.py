@@ -318,7 +318,6 @@ class SMACliteEnv(gym.Env):
                 else [ally for ally in self.agents.values() if ally != unit]
         distance = None
         for target in targets:
-            print(type(target))
             if type(target) is tuple:
                 target, distance = target
             if target is unit:
