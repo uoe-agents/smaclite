@@ -2,6 +2,7 @@ import numpy as np
 import smaclite.env.maps.map as ma
 import smaclite.env.units.unit_type as ut
 from smaclite.env.units.combat_type import CombatType
+from smaclite.env.util import point_inside_circle
 
 TICKS_PER_SECOND = 16
 GAME_TICK_TIME = 1 / TICKS_PER_SECOND
@@ -94,14 +95,12 @@ class Unit(object):
         return self.command.execute(self, **kwargs)
 
     def has_within_attack_range(self, target: 'Unit'):
-        dpos = target.pos - self.pos
         radius = self.attack_range + target.radius + self.radius
-        return np.inner(dpos, dpos) <= radius ** 2
+        return point_inside_circle(self.pos, target.pos, radius)
 
     def has_within_scan_range(self, target: 'Unit'):
-        dpos = target.pos - self.pos
         radius = self.minimum_scan_range + target.radius
-        return np.inner(dpos, dpos) <= radius ** 2
+        return point_inside_circle(self.pos, target.pos, radius)
 
     def heal(self, target: 'Unit'):
         if self.combat_type != CombatType.HEALING:

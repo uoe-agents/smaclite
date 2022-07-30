@@ -12,7 +12,8 @@ from smaclite.env.units.unit import Unit
 from smaclite.env.units.unit_command import (AttackMoveCommand,
                                              AttackUnitCommand, MoveCommand,
                                              NoopCommand, StopCommand)
-from smaclite.env.units.unit_type import CombatType, StandardUnit, UnitType
+from smaclite.env.units.unit_type import CombatType, UnitType
+from smaclite.env.util import point_inside_circle
 from smaclite.env.util.direction import Direction
 
 GROUP_BUFFER = 0.05
@@ -366,9 +367,7 @@ class SMACliteEnv(gym.Env):
             return 0
         if distance is not None:
             return distance <= AGENT_TARGET_RANGE
-        dpos = target.pos - unit.pos
-        distance_sq = np.inner(dpos, dpos)
-        return distance_sq <= AGENT_TARGET_RANGE_SQ
+        return point_inside_circle(target.pos, unit.pos, AGENT_TARGET_RANGE)
 
     def __get_unit_type_id(self, unit_type: UnitType):
         """"

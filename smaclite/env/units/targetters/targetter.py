@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Callable
 
 import numpy as np
+from smaclite.env.util import point_inside_circle
 
 
 class Targetter(object):
@@ -34,8 +35,8 @@ class KamikazeTargetter(Targetter):
         neighbours = neighbour_finder.query_radius([origin],
                                                    self.radius + max_radius)[0]
         return sum(origin.deal_damage(target) for target in neighbours
-                   if np.inner(dpos := target.pos - origin.pos, dpos)
-                   <= (self.radius + target.radius) ** 2)
+                   if point_inside_circle(target.pos, origin.pos,
+                                          self.radius + target.radius))
 
 
 class LaserBeamTargetter(Targetter):
