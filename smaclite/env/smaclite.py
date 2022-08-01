@@ -1,4 +1,3 @@
-import random
 from typing import Dict, List, Tuple
 
 import gym
@@ -35,9 +34,9 @@ class SMACliteEnv(gym.Env):
                  map_info: MapInfo = None,
                  map_file: str = None,
                  seed=None):
+
         if seed is not None:
-            np.random.seed(seed)
-            random.seed(seed)
+            self.seed(seed)
         if map_info is None and map_file is None:
             raise ValueError("Either map_info or map_file must be provided.")
         if map_file is not None:
@@ -267,7 +266,7 @@ class SMACliteEnv(gym.Env):
         self.velocity_updater.compute_new_velocities(self.all_units)
 
         shuffled_units = list(self.all_units.values())
-        random.shuffle(shuffled_units)
+        np.random.shuffle(shuffled_units)
         reward = sum(unit.game_step(
             neighbour_finder=self.__get_targetter_neighbour_finder(unit),
             max_radius=self.max_unit_radius
@@ -315,7 +314,8 @@ class SMACliteEnv(gym.Env):
         if targets is None:
             targets = self.enemies.values() \
                 if unit.combat_type == CombatType.DAMAGE \
-                else [ally for ally in self.agents.values() if ally != unit]
+                else [ally for ally in self.agents.values()
+                      if ally.combat_type != CombatType.HEALING]
         distance = None
         for target in targets:
             if type(target) is tuple:
