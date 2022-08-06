@@ -1,16 +1,14 @@
 from dataclasses import dataclass
 from typing import List, Tuple
+
 import numpy as np
 from smaclite.env.rvo2.static_obstacle import StaticObstacle
-
 from smaclite.env.units.unit import Unit
-from smaclite.env.util.plane import Plane
 
 TAU = 1
 INV_TIME_HORIZON = 1 / TAU
 TAU_OBST = 1
 INV_TIME_HORIZON_OBST = 1 / TAU_OBST
-USE_RVO = True
 
 
 @dataclass
@@ -31,8 +29,12 @@ def vec_len_sq(v: np.ndarray) -> float:
     return np.inner(v, v)
 
 
+def left_of(a, b, c):
+    return det(a - c, b - a) < 0
+
+
 def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]],
-                         static_obstacles: List[StaticObstacle]):
+                         obstacle_neighbours: List[StaticObstacle]):
     """This is, for the most part, a direct port of the C++ RVO2 library.
     All credits for the original code go to:
     https://gamma.cs.unc.edu/RVO2/
@@ -55,27 +57,23 @@ def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]],
     obstacle_lines = []
     unit_lines = []
 
-    obst_search_radius_sq = (unit.radius + TAU * unit.max_velocity) ** 2
-    obstacle_neighbours = [obstacle for obstacle in static_obstacles
-                           if obstacle.distance_sq_to(unit)
-                           < obst_search_radius_sq] \
-        if unit.plane != Plane.COLOSSUS \
-        else []
     # Static obstacle lines
     for o in obstacle_neighbours:
         for i, o1 in enumerate(o.lines):
             o2 = o.lines[(i + 1) % len(o.lines)]
+            if not left_of(o1.point, o2.point, unit.pos):
+                continue
             rel_pos_1 = o1.point - unit.pos
             rel_pos_2 = o2.point - unit.pos
 
             if any(det(INV_TIME_HORIZON_OBST * rel_pos_1
                        - line.point,
                        line.direction)
-                   - INV_TIME_HORIZON_OBST * unit.radius >= -1e-6
+                   - INV_TIME_HORIZON_OBST * unit.radius >= -1e-5
                    and det(INV_TIME_HORIZON_OBST * rel_pos_2
                            - line.point,
                            line.direction)
-                   - INV_TIME_HORIZON_OBST * unit.radius >= -1e-6
+                   - INV_TIME_HORIZON_OBST * unit.radius >= -1e-5
                    for line in obstacle_lines):
                 # Already covered by a previous obstacle
                 continue
@@ -86,7 +84,7 @@ def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]],
             radius_sq = unit.radius_sq
 
             obstacle_vector = o2.point - o1.point
-            s = (-rel_pos_1.dot(obstacle_vector)) \
+            s = np.inner(-rel_pos_1, obstacle_vector) \
                 / vec_len_sq(obstacle_vector)
             dist_sq_line = vec_len_sq(-rel_pos_1
                                       - np.inner(s, obstacle_vector))
@@ -99,7 +97,7 @@ def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]],
                                                      rel_pos_1[0]]))
                 obstacle_lines.append(line)
                 continue
-            elif s > 1 and dist_sq_2 < radius_sq:
+            elif s > 1 and dist_sq_2 <= radius_sq:
                 if det(rel_pos_2, o2.unit_direction) < 0:
                     continue
                 line.point = np.zeros(2)
@@ -107,7 +105,7 @@ def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]],
                                                      rel_pos_2[0]]))
                 obstacle_lines.append(line)
                 continue
-            elif s > 0 and s < 1 and dist_sq_line < radius_sq:
+            elif s > 0 and s < 1 and dist_sq_line <= radius_sq:
                 line.point = np.zeros(2)
                 line.direction = -o1.unit_direction
                 obstacle_lines.append(line)
@@ -163,15 +161,16 @@ def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]],
             right_cutoff = INV_TIME_HORIZON_OBST * (o2.point - unit.pos)
             cutoff_vector = right_cutoff - left_cutoff
 
-            t = 0.5 if o1 is o2 else np.inner(unit.velocity - left_cutoff,
-                                              left_cutoff) \
-                / vec_len_sq(cutoff_vector)
+            t = 0.5 if o1 is o2 else (np.inner(unit.velocity - left_cutoff,
+                                               cutoff_vector) /
+                                      vec_len_sq(cutoff_vector))
             t_left = np.inner(unit.velocity - left_cutoff,
                               left_leg_dir)
             t_right = np.inner(unit.velocity - right_cutoff,
                                right_leg_dir)
 
-            if t < 0 and t_left < 0 or o1 is o2 and t_left < 0 and t_right < 0:
+            if (t < 0 and t_left < 0) \
+                    or (o1 is o2 and t_left < 0 and t_right < 0):
                 unit_w = normalize(unit.velocity - left_cutoff)
                 line.direction = np.array([unit_w[1], -unit_w[0]])
                 line.point = left_cutoff + \
@@ -225,7 +224,7 @@ def compute_new_velocity(unit: Unit, neighbours: List[Tuple[Unit, float]],
 
     # Unit lines
     for other, distance in neighbours:
-        if other == unit or other.hp == 0:
+        if other is unit or other.hp == 0:
             continue
         relative_position = other.pos - unit.pos
         relative_velocity = unit.velocity - other.velocity
@@ -326,7 +325,7 @@ def linear_program_1(lines: List[Line], line_no: int, max_velocity: float,
                 return False, None
             continue
         t = numerator / denominator
-        if denominator > 0:
+        if denominator >= 0:
             t_right = min(t_right, t)
         else:
             t_left = max(t_left, t)
@@ -386,7 +385,7 @@ def linear_program_3(lines: List[Line], num_obstacle_lines: int,
         for other in lines[num_obstacle_lines:i]:
             new_line = Line()
             determinant = det(line.direction, other.direction)
-            if abs(determinant) < 1e-5:
+            if abs(determinant) <= 1e-5:
                 # lines are parallel
                 if np.inner(line.direction, other.direction) > 0:
                     # lines are in the same direction

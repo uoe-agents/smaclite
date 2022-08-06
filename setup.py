@@ -13,7 +13,8 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
     ],
-    install_requires=["numpy", "gym>=0.25", "pygame", "scikit-learn"],
+    install_requires=["numpy", "gym>=0.25", "pygame", "scikit-learn",
+                      "Rtree==1.0.0"],
     extras_require={"test": ["pytest"]},
     include_package_data=True,
 )

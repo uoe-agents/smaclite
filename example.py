@@ -6,11 +6,13 @@ import numpy as np
 import smaclite  # noqa
 
 RENDER = False
+USE_CPP_RVO2 = True
 
 
 def main():
     env = "MMM2"
-    env = gym.make(f"smaclite/{env}-v0")
+    env = gym.make(f"smaclite/{env}-v0",
+                   use_cpp_rvo2=USE_CPP_RVO2)
     episode_num = 20
     total_time = 0
     total_timesteps = 0

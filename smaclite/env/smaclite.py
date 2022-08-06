@@ -5,7 +5,8 @@ import numpy as np
 
 from smaclite.env.maps.map import Faction, Group, MapInfo
 from smaclite.env.rvo2.neighbour_finder import NeighbourFinder
-from smaclite.env.rvo2.velocity_updater import VelocityUpdater
+from smaclite.env.rvo2.velocity_updater import (CPPVelocityUpdater,
+                                                NumpyVelocityUpdater)
 from smaclite.env.terrain.terrain import TerrainType
 from smaclite.env.units.unit import Unit
 from smaclite.env.units.unit_command import (AttackMoveCommand,
@@ -33,7 +34,8 @@ class SMACliteEnv(gym.Env):
     def __init__(self,
                  map_info: MapInfo = None,
                  map_file: str = None,
-                 seed=None):
+                 seed=None,
+                 use_cpp_rvo2=False):
 
         if seed is not None:
             self.seed(seed)
@@ -64,9 +66,15 @@ class SMACliteEnv(gym.Env):
         self.max_unit_radius = max(type.radius
                                    for group in self.map_info.groups
                                    for type, _ in group.units)
-        self.velocity_updater = VelocityUpdater(self.neighbour_finder_all,
-                                                self.max_unit_radius,
-                                                map_info.terrain)
+        planes = {t.stats.plane
+                  for group in map_info.groups
+                  for t, _ in group.units}
+        velocity_updater_cls = CPPVelocityUpdater if use_cpp_rvo2 \
+            else NumpyVelocityUpdater
+        self.velocity_updater = velocity_updater_cls(self.neighbour_finder_all,
+                                                     self.max_unit_radius,
+                                                     map_info.terrain,
+                                                     planes)
         self.last_actions: np.ndarray = np.zeros(self.n_actions
                                                  * self.n_agents)
         # enemy attackable, distance, x, y, health, shield, unit type
@@ -125,6 +133,7 @@ class SMACliteEnv(gym.Env):
         self.neighbour_finder_ally.set_all_units(self.agents)
         self.neighbour_finder_enemy.set_all_units(self.enemies)
         self.neighbour_finder_all.set_all_units(self.all_units)
+        self.velocity_updater.reset_all_units(self.all_units)
         self.max_reward = self.n_enemies * REWARD_KILL + REWARD_WIN \
             + sum(enemy.hp + enemy.shield
                   for enemy in self.enemies.values())
