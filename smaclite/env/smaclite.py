@@ -35,7 +35,8 @@ class SMACliteEnv(gym.Env):
                  map_info: MapInfo = None,
                  map_file: str = None,
                  seed=None,
-                 use_cpp_rvo2=False):
+                 use_cpp_rvo2=False,
+                 **kwargs):
 
         if seed is not None:
             self.seed(seed)
