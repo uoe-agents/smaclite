@@ -5,7 +5,6 @@
     "cooldown": 1.07,
     "speed": 3.15,
     "attack_range": 6,
-    "sight_range": 10,
     "size": 1.125,
     "attributes": ["ARMORED", "BIOLOGICAL"],
     "bonuses": {"ARMORED": 10},

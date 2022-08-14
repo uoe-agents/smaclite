@@ -65,7 +65,7 @@ class AttackUnitCommand(Command):
         if unit.cooldown > 0:
             return 0
         unit.cooldown = unit.max_cooldown
-        return unit.targetter.target(unit, self.target, **kwargs)
+        return unit.targeter.target(unit, self.target, **kwargs)
 
 
 class MoveCommand(Command):
@@ -117,8 +117,8 @@ class AttackMoveCommand(Command):
     def prepare_velocity(self, unit: Unit) -> np.ndarray:
         if unit.target is None:
             target_picking_func = self.__pick_target_damage \
-                if unit.combat_type == CombatType.DAMAGE \
-                else self.__pick_target_healing
+            if unit.combat_type == CombatType.DAMAGE \
+            else self.__pick_target_healing
             closest_target = target_picking_func(unit)
 
             if closest_target is None:

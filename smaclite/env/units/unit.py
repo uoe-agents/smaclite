@@ -1,8 +1,8 @@
 import numpy as np
-import smaclite.env.maps.map as ma
 import smaclite.env.units.unit_type as ut
 from smaclite.env.units.combat_type import CombatType
 from smaclite.env.util import point_inside_circle
+from smaclite.env.util.faction import Faction
 
 TICKS_PER_SECOND = 16
 GAME_TICK_TIME = 1 / TICKS_PER_SECOND
@@ -14,7 +14,7 @@ ENERGY_PER_SECOND = 0.5625
 
 
 class Unit(object):
-    def __init__(self, unit_type: ut.UnitType, faction: ma.Faction,
+    def __init__(self, unit_type: ut.UnitType, faction: Faction,
                  x: float, y: float, idd: int, idd_in_faction: int) -> None:
         self.id = idd
         self.id_in_faction = idd_in_faction
@@ -50,7 +50,7 @@ class Unit(object):
         self.combat_type = unit_type.stats.combat_type
         self.attacking = False
         self.attacks = self.type.stats.attacks
-        self.targetter = ut.TARGETTER_CACHE[self.type.stats.name]
+        self.targeter = ut.TARGETER_CACHE[self.type.stats.name]
         # Used for the purpose of attack-moving
         self.potential_targets = []
         self.priority_targets = []
@@ -144,7 +144,7 @@ class Unit(object):
         amount_dealt = max(0, min(amount - self.armor, self.hp))
         self.hp -= amount_dealt
         reward += amount_dealt
-        if self.faction == ma.Faction.ALLY:
+        if self.faction == Faction.ALLY:
             # No rewards for allies taking damage
             return 0
         if self.hp == 0:

@@ -5,11 +5,10 @@
     "cooldown": 1,
     "speed": 3.15,
     "attack_range": 0.25,
-    "sight_range": 8,
     "size": 0.75,
     "attributes": ["BIOLOGICAL"],
-    "targetter": "KAMIKAZE",
-    "targetter_kwargs": {
+    "targeter": "KAMIKAZE",
+    "targeter_kwargs": {
         "radius": 2.2
     },
     "valid_targets": ["GROUND"],

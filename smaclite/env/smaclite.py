@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 import gym
 import numpy as np
 
-from smaclite.env.maps.map import Faction, Group, MapInfo
+from smaclite.env.maps.map import Group, MapInfo
 from smaclite.env.rvo2.neighbour_finder import NeighbourFinder
 from smaclite.env.rvo2.velocity_updater import (CPPVelocityUpdater,
                                                 NumpyVelocityUpdater)
@@ -15,6 +15,7 @@ from smaclite.env.units.unit_command import (AttackMoveCommand,
 from smaclite.env.units.unit_type import CombatType, UnitType
 from smaclite.env.util import point_inside_circle
 from smaclite.env.util.direction import Direction
+from smaclite.env.util.faction import Faction
 
 GROUP_BUFFER = 0.05
 AGENT_SIGHT_RANGE = 9
@@ -202,7 +203,7 @@ class SMACliteEnv(gym.Env):
 
         return np.array(state)
 
-    def __get_targetter_neighbour_finder(self, unit: Unit):
+    def __get_targeter_neighbour_finder(self, unit: Unit):
         is_ally = unit.faction == Faction.ALLY
         is_healer = unit.combat_type == CombatType.HEALING
         if is_ally ^ is_healer:
@@ -278,7 +279,7 @@ class SMACliteEnv(gym.Env):
         shuffled_units = list(self.all_units.values())
         np.random.shuffle(shuffled_units)
         reward = sum(unit.game_step(
-            neighbour_finder=self.__get_targetter_neighbour_finder(unit),
+            neighbour_finder=self.__get_targeter_neighbour_finder(unit),
             max_radius=self.max_unit_radius
             )
                      for unit in shuffled_units)

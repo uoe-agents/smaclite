@@ -6,11 +6,7 @@ from typing import Dict, List, Tuple
 
 from smaclite.env.units.unit_type import StandardUnit, UnitType
 from smaclite.env.terrain.terrain import TERRAIN_PRESETS, TerrainPreset, TerrainType
-
-
-class Faction(Enum):
-    ALLY = 'ALLY'
-    ENEMY = 'ENEMY'
+from smaclite.env.util.faction import Faction
 
 
 @dataclass

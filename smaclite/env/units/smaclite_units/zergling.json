@@ -5,7 +5,6 @@
     "cooldown": 0.497,
     "speed": 4.13,
     "attack_range": "MELEE",
-    "sight_range": 8,
     "size": 0.75,
     "attributes": ["LIGHT", "BIOLOGICAL"],
     "valid_targets": ["GROUND"],

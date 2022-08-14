@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Set
 
-import smaclite.env.units.targetters.targetter as t
+import smaclite.env.units.targeters.targeter as t
 from smaclite.env.units.combat_type import CombatType
 from smaclite.env.util.plane import Plane
 
@@ -23,7 +23,7 @@ class Attribute(Enum):
     HEROIC = 'HEROIC'
 
 
-TARGETTER_CACHE: Dict[str, t.Targetter] = {}
+TARGETER_CACHE: Dict[str, t.Targeter] = {}
 
 
 @dataclass
@@ -35,7 +35,6 @@ class UnitStats(object):
     cooldown: float
     speed: float
     attack_range: int
-    sight_range: int
     size: float
     attributes: Set[Attribute]
     valid_targets: Set[Plane]
@@ -72,10 +71,10 @@ class UnitStats(object):
             stats_dict['combat_type'] = CombatType(stats_dict['combat_type'])
         if 'plane' in stats_dict:
             stats_dict['plane'] = Plane(stats_dict['plane'])
-        targetter_kwargs = stats_dict.pop('targetter_kwargs', {})
-        TARGETTER_CACHE[stats_dict['name']] = \
-            t.TargetterType[stats_dict.pop(
-                'targetter', 'STANDARD')].value(**targetter_kwargs)
+        targeter_kwargs = stats_dict.pop('targeter_kwargs', {})
+        TARGETER_CACHE[stats_dict['name']] = \
+            t.TargeterType[stats_dict.pop(
+                'targeter', 'STANDARD')].value(**targeter_kwargs)
         return cls(**stats_dict)
 
 

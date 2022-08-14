@@ -1,12 +1,14 @@
 from typing import List
 
 import pygame
-from smaclite.env.maps.map import Faction, MapInfo
+from smaclite.env.maps.map import MapInfo
 from smaclite.env.terrain.terrain import TerrainType
 from smaclite.env.units.combat_type import CombatType
 from smaclite.env.units.unit import Unit
 from smaclite.env.units.unit_command import MoveCommand
 from smaclite.env.units.unit_type import StandardUnit
+from smaclite.env.util.faction import Faction
+
 
 TILE_SIZE = 32
 TERRAIN_COLORS = {

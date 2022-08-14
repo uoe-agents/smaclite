@@ -7,7 +7,6 @@
     "attacks": 2,
     "speed": 3.15,
     "attack_range": "MELEE",
-    "sight_range": 9,
     "size": 1,
     "attributes": ["LIGHT", "BIOLOGICAL"],
     "valid_targets": ["GROUND"]

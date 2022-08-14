@@ -1,28 +1,29 @@
 from enum import Enum
 from typing import Callable
+from smaclite.env.util.faction import Faction
 
 import numpy as np
 from smaclite.env.util import point_inside_circle
 
 
-class Targetter(object):
+class Targeter(object):
     def target(self, origin, target, **kwargs) -> float:
         raise NotImplementedError
 
 
-class StandardTargetter(Targetter):
+class StandardTargeter(Targeter):
     def target(self, origin, target, **kwargs) -> float:
         return origin.deal_damage(target)
 
 
-class HealTargetter(Targetter):
+class HealTargeter(Targeter):
     def target(self, origin, target, **kwargs) -> float:
         origin.heal(target)
         return 0
 
 
-class KamikazeTargetter(Targetter):
-    """A type of targetter that explodes in a radius around it upon attacking,
+class KamikazeTargeter(Targeter):
+    """A type of targeter that explodes in a radius around it upon attacking,
     then dies.
     """
     def __init__(self, radius: float) -> None:
@@ -31,16 +32,18 @@ class KamikazeTargetter(Targetter):
     def target(self, origin, target, **kwargs) -> float:
         neighbour_finder = kwargs['neighbour_finder']
         max_radius = kwargs['max_radius']
+        reward_bonus = 0 if origin.faction == Faction.ALLY else origin.hp
         origin.hp = 0
         neighbours = neighbour_finder.query_radius([origin],
                                                    self.radius + max_radius)[0]
         return sum(origin.deal_damage(target) for target in neighbours
                    if point_inside_circle(target.pos, origin.pos,
-                                          self.radius + target.radius))
+                                          self.radius + target.radius)) \
+            + reward_bonus
 
 
-class LaserBeamTargetter(Targetter):
-    """A type of targetter that fires a laser line perpendicular to the
+class LaserBeamTargeter(Targeter):
+    """A type of targeter that fires a laser line perpendicular to the
     line from the origin to the target, hitting all the units the laser
     line touches.
     """
@@ -75,8 +78,8 @@ class LaserBeamTargetter(Targetter):
         return lambda x: np.dot(x, rot_matrix)
 
 
-class TargetterType(Enum):
-    STANDARD = StandardTargetter
-    KAMIKAZE = KamikazeTargetter
-    LASER_BEAM = LaserBeamTargetter
-    HEAL = HealTargetter
+class TargeterType(Enum):
+    STANDARD = StandardTargeter
+    KAMIKAZE = KamikazeTargeter
+    LASER_BEAM = LaserBeamTargeter
+    HEAL = HealTargeter

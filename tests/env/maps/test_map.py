@@ -1,4 +1,5 @@
-from smaclite.env.maps.map import Faction, MapPreset
+from smaclite.env.maps.map import MapPreset
+from smaclite.env.util.faction import Faction
 
 
 def test_number_of_units():

@@ -8,10 +8,9 @@
     "speed": 3.5,
     "size": 1.5,
     "attack_range": 4,
-    "sight_range": 11,
     "combat_type": "HEALING",
     "attributes": ["ARMORED", "MECHANICAL"],
-    "targetter": "HEAL",
+    "targeter": "HEAL",
     "plane": "AIR",
     "valid_targets": ["GROUND"]
 }

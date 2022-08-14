@@ -5,7 +5,6 @@
     "cooldown": 1.32,
     "speed": 0,
     "attack_range": 7,
-    "sight_range": 11,
     "size": 1,
     "minimum_scan_range": 10,
     "attributes": ["ARMORED", "BIOLOGICAL", "STRUCTURE"],
