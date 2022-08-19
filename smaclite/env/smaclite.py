@@ -38,6 +38,21 @@ class SMACliteEnv(gym.Env):
                  seed=None,
                  use_cpp_rvo2=False,
                  **kwargs):
+        """Initializes the environment. Note that one of map_info or map_file
+        is always required.
+
+        Args:
+            map_info (MapInfo, optional): The object with all of the
+                map information. Defaults to None.
+            map_file (str, optional): The location of a JSON file with
+                all of the map information. Defaults to None.
+            seed (optional): The seed for the random number generator.
+                Defaults to None.
+            use_cpp_rvo2 (bool, optional): whether the C++ versino of the
+                RVO2 library should be used. If not, the Numpy version will
+                be used. Defaults to False.
+
+        """
 
         if seed is not None:
             self.seed(seed)
