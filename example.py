@@ -6,7 +6,7 @@ import numpy as np
 import smaclite  # noqa
 
 RENDER = False
-USE_CPP_RVO2 = True
+USE_CPP_RVO2 = False
 
 
 def main():
