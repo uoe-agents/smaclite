@@ -13,6 +13,8 @@ def main():
     env = "MMM2"
     env = gym.make(f"smaclite/{env}-v0",
                    use_cpp_rvo2=USE_CPP_RVO2)
+    # env = gym.make(f"messy-smaclite/{env}-v0",
+    #                use_cpp_rvo2=USE_CPP_RVO2) # Messy SMAClite
     episode_num = 20
     total_time = 0
     total_timesteps = 0

@@ -1,15 +1,20 @@
 # SMAClite - Starcraft Mulit-Agent Challenge lite
+
 This is a repository for the SMAClite environment. It is a (nearly) pure Python reimplementation of the Starcraft Multi-Agent Challenge, using Numpy and OpenAI Gym.
 
 ## Features
+
 The main features of this environment include:
+
 * A fully functional Python implementation of the SMAC environment
 * A JSON interface for defining units and scenarios
 * Compatibility with the OpenAI Gym API
 * (optional) a highly-performant [C++ implementation](https://github.com/micadam/SMAClite-Python-RVO2) of the collision avoidance algorithm
 
 ## Available units
+
 The following units are available in this environment:
+
 * baneling
 * colossus
 * marauder
@@ -19,8 +24,11 @@ The following units are available in this environment:
 * stalker
 * zealot
 * zergling
+
 ## Available scenarios
-The following scenarios are available in this environment:
+
+The following scenarios are available in this environment (Scenarios are also availiable in the MessySMAClite version):
+
 * 10m_vs_11m
 * 27m_vs_30m
 * 2c_vs_64zg
@@ -35,15 +43,21 @@ The following scenarios are available in this environment:
 * mmm2
 
 Note that further scenarios can easily be added by modifying or creating a scenario JSON file.
+
 ## Installation
+
 Run
+
 ```
 pip install .
 ```
+
 In the SMAClite directory
 
 ## Running
+
 As far as we are aware, this project fully adheres to the [OpenAI Gym API](https://www.gymlibrary.dev/), so it can be used with any framework capable of interfacing with Gym-capable environments. We recommend the [ePyMARL](https://github.com/uoe-agents/epymarl) framework, made available in our repository. EPyMARL uses `yaml` files to specify run configurations. To train a model in the `MMM2` scenario using the `MAPPO` algorithm, you can use this example command:
+
 ```
 python3 src/main.py --config=mappo --env-config=gymma with seed=1 env_args.time_limit=120 env_args.key="smaclite:smaclite/MMM2-v0
 ```
