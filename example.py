@@ -5,7 +5,7 @@ import numpy as np
 
 import smaclite  # noqa
 
-RENDER = False
+RENDER = True
 USE_CPP_RVO2 = False
 
 
@@ -28,6 +28,7 @@ def main():
         while not done and timestep_no < 200:
             actions = []
             avail_actions = info['avail_actions']
+            print("avail_actions", avail_actions)
             for info in range(env.n_agents):
                 avail_indices = [i for i, x
                                  in enumerate(avail_actions[info])
