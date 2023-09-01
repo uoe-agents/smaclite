@@ -10,7 +10,8 @@ USE_CPP_RVO2 = False
 
 
 def main():
-    env = "MMM2"
+    #env = "MMM2"
+    env = "10m_vs_11m"
     env = gym.make(f"smaclite/{env}-v0",
                    use_cpp_rvo2=USE_CPP_RVO2)
     episode_num = 20
