@@ -26,7 +26,6 @@ def main():
         while not done and timestep_no < 200:
             actions = []
             avail_actions = info['avail_actions']
-            print("avail_actions", avail_actions)
             for info in range(env.n_agents):
                 avail_indices = [i for i, x
                                  in enumerate(avail_actions[info])
@@ -34,7 +33,7 @@ def main():
                 actions.append(int(np.random.choice(avail_indices)))
                 # time.sleep(1/2)
             timer = time.time()
-            obs, reward, done, info = env.step(actions)
+            obs, reward, done, _, info = env.step(actions)
             episode_time += time.time() - timer
             episode_reward += reward
             timestep_no += 1

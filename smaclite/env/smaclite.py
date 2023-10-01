@@ -180,7 +180,7 @@ class SMACliteEnv(gym.Env):
             reward += 200
         done = all_enemies_dead or len(self.agents) == 0
         reward /= self.max_reward / 20  # Scale reward between 0 and 20
-        return self.__get_obs(), reward, done, self.__get_info()
+        return self.__get_obs(), reward, done, done, self.__get_info()
 
     def render(self, mode='human'):
         if mode == 'human':
