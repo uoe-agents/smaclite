@@ -1,4 +1,4 @@
-# SMAClite - Starcraft Mulit-Agent Challenge lite
+# SMAClite - Starcraft Multi-Agent Challenge lite
 This is a repository for the SMAClite environment. It is a (nearly) pure Python reimplementation of the Starcraft Multi-Agent Challenge, using Numpy and OpenAI Gym.
 
 ## Features
