@@ -428,7 +428,12 @@ class SMACliteEnv(gym.Env):
 
     def __get_info(self):
         # return {"avail_actions": self.get_avail_actions(), "state": self.get_state()}
-        return {}
+        if len(self.enemies) == 0:
+            return {"battle_won": True}
+        elif len(self.agents) == 0:
+            return {"battle_won": False}
+        else:
+            return {}
 
     def __can_target(self, unit: Unit, target: Unit, distance=None):
         if target.hp == 0 or unit.hp == 0:
