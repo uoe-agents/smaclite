@@ -1,6 +1,10 @@
 # SMAClite - Starcraft Multi-Agent Challenge lite
 This is a repository for the SMAClite environment. It is a (nearly) pure Python reimplementation of the Starcraft Multi-Agent Challenge, using Numpy and OpenAI Gym.
 
+> [!CAUTION]
+> The SMAClite environment was updated to support the new [Gymnasium](https://gymnasium.farama.org/) interface in replacement of the deprecated `gym=0.25/0.26` dependency. For backwards compatibility, please see [Gymnasium compatibility documentation](https://gymnasium.farama.org/content/gym_compatibility/) or use version v1.0.0 of the repository.
+
+
 ## Features
 The main features of this environment include:
 * A fully functional Python implementation of the SMAC environment
