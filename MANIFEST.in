@@ -1,0 +1,2 @@
+recursive-include smaclite/env *.json
+recursive-include smaclite/env *.slt
