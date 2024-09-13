@@ -32,7 +32,7 @@ REWARD_KILL = 10
 
 
 class SMACliteEnv(gym.Env):
-    metadata = {"render_modes": ["human"], "render_fps": 60}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 60}
     """
     This is the SMAClite environment.
     """
@@ -43,6 +43,7 @@ class SMACliteEnv(gym.Env):
         map_file: str = None,
         seed=None,
         use_cpp_rvo2=False,
+        render_mode="human",
         **kwargs,
     ):
         """Initializes the environment. Note that one of map_info or map_file
@@ -63,6 +64,8 @@ class SMACliteEnv(gym.Env):
 
         seed = seed if seed is not None else np.random.randint(2 ** 31 - 1)
         self.seed(seed)
+        self.render_mode = render_mode
+        self.renderer = None
         if map_info is None and map_file is None:
             raise ValueError("Either map_info or map_file must be provided.")
         if map_file is not None:
@@ -73,7 +76,6 @@ class SMACliteEnv(gym.Env):
         self.n_enemies = map_info.num_enemy_units
         self.enemies: Dict[int, Unit] = []
         self.all_units: Dict[int, Unit] = {}
-        self.renderer = None
         self.neighbour_finder_ally: NeighbourFinder = NeighbourFinder()
         self.neighbour_finder_enemy: NeighbourFinder = NeighbourFinder()
         self.neighbour_finder_all: NeighbourFinder = NeighbourFinder()
@@ -210,12 +212,14 @@ class SMACliteEnv(gym.Env):
         reward /= self.max_reward / 20  # Scale reward between 0 and 20
         return self.get_obs(), reward, done, truncated, self.__get_info()
 
-    def render(self, mode="human"):
-        if mode == "human":
-            if self.renderer is None:
-                from smaclite.env.rendering.renderer import Renderer
+    def render(self):
+        if self.renderer is None:
+            from smaclite.env.rendering.renderer import Renderer
+            self.renderer = Renderer()
 
-                self.renderer = Renderer()
+        if self.render_mode == "rgb_array":
+            return self.renderer.render(self.map_info, self.all_units.values(), return_rgb_array=True)
+        else:
             self.renderer.render(self.map_info, self.all_units.values())
 
     def close(self):

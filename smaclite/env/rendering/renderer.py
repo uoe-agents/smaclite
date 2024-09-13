@@ -40,7 +40,7 @@ class Renderer:
         self.clock = None
         self.fonts = {}
 
-    def render(self, map_info: MapInfo, units: List[Unit]):
+    def render(self, map_info: MapInfo, units: List[Unit], return_rgb_array: bool = False):
         if self.window is None:
             pygame.init()
             pygame.display.init()
@@ -121,8 +121,10 @@ class Renderer:
         self.window.blit(canvas, canvas.get_rect())
         pygame.event.pump()
         pygame.display.update()
-
-        self.clock.tick(RENDER_FPS)
+        if return_rgb_array:
+            frame = pygame.surfarray.pixels3d(canvas)
+            frame = frame.swapaxes(0, 1)
+            return frame
 
     def close(self):
         if self.window is not None:
