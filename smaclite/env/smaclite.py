@@ -21,6 +21,7 @@ from smaclite.env.util import point_inside_circle
 from smaclite.env.util.direction import Direction
 from smaclite.env.util.faction import Faction
 
+
 GROUP_BUFFER = 0.05
 AGENT_SIGHT_RANGE = 9
 AGENT_TARGET_RANGE = 6
@@ -289,8 +290,9 @@ class SMACliteEnv(gym.Env):
             return self.neighbour_finder_ally
 
     def __world_step(self):
-        if self.renderer is not None:
-            self.render()
+        # Do not automatically render the environment unless render() is called
+        # if self.renderer is not None:
+        #     self.render()
         for unit in self.all_units.values():
             unit.clean_up_target()
         # NOTE There is an assumption here that the set of attack-moving units

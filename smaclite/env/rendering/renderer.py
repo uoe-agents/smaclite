@@ -36,17 +36,22 @@ RENDER_FPS = 22.4
 
 class Renderer:
     def __init__(self):
+        self.initialised = False
         self.window = None
         self.clock = None
         self.fonts = {}
 
     def render(self, map_info: MapInfo, units: List[Unit], return_rgb_array: bool = False):
-        if self.window is None:
+        if not self.initialised:
+            self.initialised = True
             pygame.init()
+
+        if not return_rgb_array and self.window is None:
             pygame.display.init()
             pygame.display.set_caption("SMAClite")
             self.window = self.__create_window(map_info)
-        if self.clock is None:
+
+        if not return_rgb_array and self.clock is None:
             self.clock = pygame.time.Clock()
 
         canvas = pygame.Surface((TILE_SIZE * map_info.width,
@@ -118,9 +123,15 @@ class Renderer:
                                  np_to_pygame(unit.command.pos,
                                               map_info.height))
 
-        self.window.blit(canvas, canvas.get_rect())
+        if not return_rgb_array:
+            assert self.window is not None and self.clock is not None, \
+                "Renderer not initialised properly"
+            self.window.blit(canvas, canvas.get_rect())
+            pygame.display.update()
+            self.clock.tick(RENDER_FPS)
+
         pygame.event.pump()
-        pygame.display.update()
+
         if return_rgb_array:
             frame = pygame.surfarray.pixels3d(canvas)
             frame = frame.swapaxes(0, 1)
